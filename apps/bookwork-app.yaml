@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/<your-username>/bookwork-gitops.git'
+    repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
     path: tenants/bookwork/base
     targetRevision: HEAD
   destination:
