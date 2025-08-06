@@ -2,10 +2,29 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: bookwork-ingress
+  annotations:
+    # This annotation tells GKE to create a Google-managed SSL certificate
+    networking.gke.io/managed-certificates: bookwork-demo-cert
+    # This annotation specifies that the Ingress is for external HTTPS traffic
+    kubernetes.io/ingress.class: "gke"
 spec:
-  # This default backend rule is important for GKE to provision an HTTP Load Balancer
-  defaultBackend:
-    service:
-      name: bookwork-frontend
-      port:
-        number: 80
+  rules:
+    - host: "bookwork-demo.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bookwork-frontend
+                port:
+                  number: 80
+---
+# This is the ManagedCertificate resource that the annotation refers to
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: bookwork-demo-cert
+spec:
+  domains:
+    - "bookwork-demo.com"
