@@ -19,6 +19,16 @@ spec:
                 name: bookwork-frontend
                 port:
                   number: 80
+    - host: "www.bookwork-demo.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bookwork-frontend
+                port:
+                  number: 80
 ---
 # This is the ManagedCertificate resource that the annotation refers to
 apiVersion: networking.gke.io/v1
@@ -28,3 +38,4 @@ metadata:
 spec:
   domains:
     - "bookwork-demo.com"
+    - "www.bookwork-demo.com"
