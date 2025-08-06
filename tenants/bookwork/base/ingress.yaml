@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bookwork-ingress
+spec:
+  # This default backend rule is important for GKE to provision an HTTP Load Balancer
+  defaultBackend:
+    service:
+      name: bookwork-frontend
+      port:
+        number: 80
