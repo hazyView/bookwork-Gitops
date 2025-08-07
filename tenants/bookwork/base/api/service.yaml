@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookwork-api
+spec:
+  selector:
+    app: bookwork-api
+  ports:
+    # This service exposes port 80, which will route to the container's port 8080
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

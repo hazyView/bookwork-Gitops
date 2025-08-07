@@ -7,6 +7,9 @@ resources:
 - letsencrypt-issuer.yaml
 - ./frontend/deployment.yaml
 - ./frontend/service.yaml
+# Commented out resource avoid DB costs
+#- ./api/deployment.yaml
+#- ./api/service.yaml
 images:
 - name: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend
   newTag: 2f0d386
