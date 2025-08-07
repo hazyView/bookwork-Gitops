@@ -4,6 +4,7 @@ namespace: bookwork
 resources:
 - namespace.yaml
 - ingress.yaml
+- self-signed-issuer.yaml
 - ./frontend/deployment.yaml
 - ./frontend/service.yaml
 images:

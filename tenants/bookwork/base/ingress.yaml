@@ -3,11 +3,16 @@ kind: Ingress
 metadata:
   name: bookwork-ingress
   annotations:
-    # This annotation tells GKE to create a Google-managed SSL certificate
-    networking.gke.io/managed-certificates: bookwork-demo-cert
-    # This annotation specifies that the Ingress is for external HTTPS traffic
-    kubernetes.io/ingress.class: "gke"
+    # Tell Kubernetes which controller to use
+    kubernetes.io/ingress.class: "nginx"
+    # Request Cert-Manager to issue a certificate
+    cert-manager.io/cluster-issuer: "selfsigned-issuer"
 spec:
+  tls:
+    - hosts:
+        - "bookwork-demo.com"
+        - "www.bookwork-demo.com"
+      secretName: bookwork-tls-secret # Cert-Manager will create this
   rules:
     - host: "bookwork-demo.com"
       http:
@@ -29,13 +34,3 @@ spec:
                 name: bookwork-frontend
                 port:
                   number: 80
----
-# This is the ManagedCertificate resource that the annotation refers to
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: bookwork-demo-cert
-spec:
-  domains:
-    - "bookwork-demo.com"
-    - "www.bookwork-demo.com"
