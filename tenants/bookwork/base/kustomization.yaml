@@ -9,4 +9,4 @@ resources:
 - ./frontend/service.yaml
 images:
 - name: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend
-  newTag: 0715dcd
+  newTag: 2f0d386
