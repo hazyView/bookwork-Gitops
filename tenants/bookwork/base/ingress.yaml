@@ -6,7 +6,7 @@ metadata:
     # Tell Kubernetes which controller to use
     kubernetes.io/ingress.class: "nginx"
     # Request Cert-Manager to issue a certificate
-    cert-manager.io/cluster-issuer: "selfsigned-issuer"
+    cert-manager.io/cluster-issuer: "letsencrypt-issuer"
 spec:
   tls:
     - hosts:
