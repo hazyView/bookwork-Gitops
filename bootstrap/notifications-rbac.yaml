@@ -1,0 +1,24 @@
+# bootstrap/notifications-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-notifications-secret-reader
+  namespace: argocd
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-notifications-secret-reader-binding
+  namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-notifications-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: argocd-notifications-controller
+  namespace: argocd
