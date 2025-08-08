@@ -12,6 +12,28 @@ data:
       Project: {{.app.spec.project}}
       Sync Status: {{.app.status.sync.status}}
       Please investigate: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  template.app-created: |
+    message: |
+      ✅ Application `{{.app.metadata.name}}` has been created.
+      Project: {{.app.spec.project}}
+      See it here: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  template.app-deleted: |
+    message: |
+      🗑️ Application `{{.app.metadata.name}}` has been deleted.
+      Project: {{.app.spec.project}}
+  template.app-restored: |
+    message: |
+      💚 Application `{{.app.metadata.name}}` has been restored to a Healthy state.
+      Project: {{.app.spec.project}}
+
+  # --- TRIGGERS ---
+  trigger.on-created: |
+    - send: [app-created]
+  trigger.on-deleted: |
+    - send: [app-deleted]
+  trigger.on-app-restored: |
+    - when: app.status.health.status == 'Healthy'
+      send: [app-restored]
   trigger.on-sync-failed: |
     - when: app.status.sync.status == 'OutOfSync' and app.status.health.status == 'Degraded'
       send: [app-sync-failed]
