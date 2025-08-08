@@ -25,7 +25,12 @@ data:
     message: |
       💚 Application `{{.app.metadata.name}}` has been restored to a Healthy state.
       Project: {{.app.spec.project}}
-
+  template.app-health-degraded: |
+    message: |
+      💔 Application `{{.app.metadata.name}}` has become Degraded.
+      Project: {{.app.spec.project}}
+      Please investigate: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  
   # --- TRIGGERS ---
   trigger.on-created: |
     - send: [app-created]
@@ -37,3 +42,6 @@ data:
   trigger.on-sync-failed: |
     - when: app.status.sync.status == 'OutOfSync' and app.status.health.status == 'Degraded'
       send: [app-sync-failed]
+  trigger.on-health-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-health-degraded]
