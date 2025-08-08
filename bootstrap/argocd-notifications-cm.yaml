@@ -30,6 +30,11 @@ data:
       💔 Application `{{.app.metadata.name}}` has become Degraded.
       Project: {{.app.spec.project}}
       Please investigate: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  template.app-out-of-sync: |
+    message: |
+      ⚠️ Application `{{.app.metadata.name}}` is OutOfSync.
+      Project: {{.app.spec.project}}
+      Status: Live state does not match the state defined in Git. Self-healing may be in progress.
   
   # --- TRIGGERS ---
   trigger.on-created: |
@@ -45,3 +50,6 @@ data:
   trigger.on-health-degraded: |
     - when: app.status.health.status == 'Degraded'
       send: [app-health-degraded]
+  trigger.on-out-of-sync: |
+    - when: app.status.sync.status == 'OutOfSync'
+      send: [app-out-of-sync]
