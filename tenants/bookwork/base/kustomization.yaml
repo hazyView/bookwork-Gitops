@@ -7,6 +7,7 @@ resources:
 - letsencrypt-issuer.yaml
 - ./frontend/deployment.yaml
 - ./frontend/service.yaml
+- ./api/sealed-secret.yaml
 # Commented out resource avoid DB costs
 #- ./api/deployment.yaml
 #- ./api/service.yaml
