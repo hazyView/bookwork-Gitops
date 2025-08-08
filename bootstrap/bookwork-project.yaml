@@ -3,8 +3,15 @@ kind: AppProject
 metadata:
   name: bookwork
   namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
 spec:
   description: "AppProject for Bookwork application"
+  syncWindows:
+    - kind: deny
+      schedule: '0 9 * * 1-5' # Deny syncs during business hours
+      duration: 8h
+      timeZone: 'America/Chicago'
   #Restrict source repositories
   sourceRepos:
     - 'https://github.com/hazyView/bookwork-gitops.git'

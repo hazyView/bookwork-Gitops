@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.slack: |
+    token: $slack-bot-token
+  template.app-sync-failed: |
+    message: |
+      🚨 Sync for application `{{.app.metadata.name}}` has failed.
+      Project: {{.app.spec.project}}
+      Sync Status: {{.app.status.sync.status}}
+      Please investigate: {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  trigger.on-sync-failed: |
+    - when: app.status.sync.status == 'OutOfSync' and app.status.health.status == 'Degraded'
+      send: [app-sync-failed]
