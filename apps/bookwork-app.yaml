@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
     path: tenants/bookwork/base
