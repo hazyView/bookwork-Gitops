@@ -35,4 +35,12 @@ spec:
   namespaceResourceWhitelist:
     - group: 'argoproj.io'
       kind: Application
+    - group: ''
+      kind: Service
+    - group: 'apps'
+      kind: Deployment
+    - group: 'networking.k8s.io'
+      kind: Ingress
+    - group: 'bitnami.com'
+      kind: SealedSecret
       
