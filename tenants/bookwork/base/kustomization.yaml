@@ -2,12 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: bookwork
 resources:
-- ../../components/infrastructure/namespace.yaml
-- ../../components/infrastructure/ingress.yaml
-- ../../components/infrastructure//infrastructure/letsencrypt-issuer.yaml
-- ../../components/frontend/deployment.yaml
-- ../../components/frontend/service.yaml
-- ../../components/api/sealed-secret.yaml
+- ../components/infrastructure/namespace.yaml
+- ../components/infrastructure/ingress.yaml
+- ../components/infrastructure/letsencrypt-issuer.yaml
+- ../components/frontend/deployment.yaml
+- ../components/frontend/service.yaml
+- ../components/api/sealed-secret.yaml
 # Commented out resource avoid DB costs
 #- ../../components/api/api/deployment.yaml
 #- ../../components/api/service.yaml
