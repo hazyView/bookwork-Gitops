@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 data:
   service.slack: |
-    token: $slack-bot-token:token
+    token: $SLACK_TOKEN
   template.app-sync-failed: |
     message: |
       🚨 Sync for application `{{.app.metadata.name}}` has failed.

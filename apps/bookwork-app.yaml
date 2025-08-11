@@ -1,6 +1,9 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
   name: bookwork-apps
   namespace: argocd
   finalizers:
@@ -17,7 +20,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
