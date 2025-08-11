@@ -8,7 +8,7 @@ resources:
 - ./frontend/deployment.yaml
 - ./frontend/service.yaml
 - ./api/sealed-secret.yaml
-- ./apps/bookwork-app.yaml
+- ../apps/bookwork-app.yaml
 # Commented out resource avoid DB costs
 #- ./api/deployment.yaml
 #- ./api/service.yaml
