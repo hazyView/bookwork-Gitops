@@ -4,7 +4,7 @@ namespace: bookwork
 resources:
 - components/infrastructure
 - components/frontend
-- components/api/
+- components/api
 # Commented out resource avoid DB costs
 #- ../../components/api/api/deployment.yaml
 #- ../../components/api/service.yaml
