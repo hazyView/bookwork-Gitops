@@ -7,6 +7,8 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     # Request Cert-Manager to issue a certificate
     cert-manager.io/cluster-issuer: "letsencrypt-issuer"
+    #Sync Wave order - created after namespace
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   tls:
     - hosts:

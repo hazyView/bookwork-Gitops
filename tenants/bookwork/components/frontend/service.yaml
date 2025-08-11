@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: bookwork-frontend
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   selector:
     app: bookwork-frontend

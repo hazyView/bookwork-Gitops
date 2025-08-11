@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bookwork
+resources:
+- sealed-secret.yaml
+# Uncomment when ready to deploy API
+# - deployment.yaml
+# - service.yaml
+images:
+- name: bookwork-api
+  newName: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-api
+  newTag: 6fb3352

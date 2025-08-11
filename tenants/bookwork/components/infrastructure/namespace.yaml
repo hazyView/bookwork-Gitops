@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookwork
+  labels:
+    name: bookwork
+    managed-by: argocd

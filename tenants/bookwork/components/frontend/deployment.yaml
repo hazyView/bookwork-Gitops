@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bookwork-frontend
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 2
   selector:
@@ -11,6 +14,7 @@ spec:
     metadata:
       labels:
         app: bookwork-frontend
+        version: v1
     spec:
       containers:
         - name: frontend
