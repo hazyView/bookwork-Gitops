@@ -1,10 +1,14 @@
 apiVersion: v1
 data:
-  oidc.config: |-
-    name: Github
-    issuer: https://github.com
-    clientID: Ov23likhDtqBQD2g46ax
-    clientSecret: $argocd-sso-secret:clientSecret
+  dex.config: |
+    connectors:
+      - type: github
+        id: github
+        name: Github
+        config:
+          clientID: Ov23likhDtqBQD2g46ax
+          clientSecret: $argocd-github-oauth-secret:clientSecret
+          redirectURI: https://argocd.bookwork-demo.com/api/dex/callback
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:
       # Ignore the cluster-autoscaler status
