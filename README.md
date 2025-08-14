@@ -176,5 +176,5 @@ All configuration changes should be made via Git commits to this repository. Arg
 ---
 
 **Repository**: [hazyView/bookwork-gitops](https://github.com/hazyView/bookwork-gitops.git)  
-**Maintainer**: Fred Marin (flmarin86@gmail.com)  
-**Last Updated**: August 2025
+**Maintainer**: Fred Lopez (flmarin86@gmail.com)  
+**Last Updated**: August 14, 2025
