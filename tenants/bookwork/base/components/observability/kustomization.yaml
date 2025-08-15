@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+resources:
+- namespace.yaml
+# Sealed Secrets for credentials
+- grafana/graf-sealed-secret.yaml
+- observability-auth-sealed-secret.yaml
+# Prometheus resources
+- prometheus/prom-rbac.yaml
+- prometheus/prom-cm.yaml
+- prometheus/prom-deployment.yaml
+- prometheus/prom-service.yaml
+- prometheus/prom-servicemonitor.yaml
+# Grafana resources
+- grafana/graf-cm.yaml
+- grafana/dashboards/bookwork-dashboard.yaml
+- grafana/graf-deployment.yaml
+- grafana/graf-service.yaml
+# Ingress for external access
+- ingress.yaml

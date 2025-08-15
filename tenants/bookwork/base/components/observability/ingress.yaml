@@ -1,0 +1,45 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: observability-ingress
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: observability-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Bookwork Observability"
+  labels:
+    app.kubernetes.io/name: observability-ingress
+    app.kubernetes.io/part-of: bookwork-observability
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - grafana.bookwork-demo.com
+    - prometheus.bookwork-demo.com
+    secretName: observability-tls
+  rules:
+  - host: grafana.bookwork-demo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
+  - host: prometheus.bookwork-demo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus
+            port:
+              number: 9090
