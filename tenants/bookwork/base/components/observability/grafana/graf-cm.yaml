@@ -40,7 +40,7 @@ data:
     enabled = true
     
     [alerting]
-    enabled = true
+    enabled = false
     
     [unified_alerting]
     enabled = true
