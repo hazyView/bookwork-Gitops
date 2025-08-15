@@ -11,7 +11,8 @@ resources:
 - prometheus/prom-cm.yaml
 - prometheus/prom-deployment.yaml
 - prometheus/prom-service.yaml
-- prometheus/prom-servicemonitor.yaml
+# Removed ServiceMonitors - not needed without Prometheus Operator
+# - prometheus/prom-servicemonitor.yaml
 # Grafana resources
 - grafana/graf-cm.yaml
 - grafana/dashboards/bookwork-dashboard.yaml
