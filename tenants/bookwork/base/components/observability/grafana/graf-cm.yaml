@@ -41,10 +41,11 @@ data:
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
-    # No organization restriction - allow any GitHub user
-    # allowed_organizations = 
-    # Use email/login/id for role mapping instead of org teams
-    role_attribute_path = contains(['hazyView', 'flmarin86@gmail.com'], login) && 'Admin' || contains(['200641523', '10237882'], string(id)) && 'Admin' || 'Viewer'
+    # Explicitly disable organization and team features
+    allowed_organizations = 
+    team_ids = 
+    # Simple role mapping based on user login name
+    role_attribute_path = login == 'hazyView' && 'Admin' || 'Viewer'
     
     [log]
     mode = console
