@@ -9,9 +9,6 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: observability-auth
-    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Bookwork Observability"
   labels:
     app.kubernetes.io/name: observability-ingress
     app.kubernetes.io/part-of: bookwork-observability

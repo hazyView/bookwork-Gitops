@@ -32,6 +32,20 @@ data:
     [auth.anonymous]
     enabled = false
     
+    [auth.github]
+    enabled = true
+    allow_sign_up = true
+    client_id = ${GF_AUTH_GITHUB_CLIENT_ID}
+    client_secret = ${GF_AUTH_GITHUB_CLIENT_SECRET}
+    scopes = user:email
+    auth_url = https://github.com/login/oauth/authorize
+    token_url = https://github.com/login/oauth/access_token
+    api_url = https://api.github.com/user
+    # No organization restriction - allow any GitHub user
+    # allowed_organizations = 
+    # Use email/login/id for role mapping instead of org teams
+    role_attribute_path = contains(['hazyView', 'flmarin86@gmail.com'], login) && 'Admin' || contains(['200641523', '10237882'], string(id)) && 'Admin' || 'Viewer'
+    
     [log]
     mode = console
     level = info
