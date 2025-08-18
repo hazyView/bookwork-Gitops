@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules-kubernetes
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: bookwork-observability
+data:
+  kubernetes-rules.yml: |
+    groups:
+      - name: kubernetes.rules
+        interval: 30s
+        rules:
+          # ============================================================================
+          # NODE LEVEL ALERTS
+          # ============================================================================
+          
+          - alert: NodeDown
+            expr: up{job="kubernetes-nodes"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              team: infrastructure
+            annotations:
+              summary: "Kubernetes node is down"
+              description: "Node {{ $labels.instance }} has been down for more than 5 minutes."
+
+          - alert: NodeHighCPUUsage
+            expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 90
+            for: 15m
+            labels:
+              severity: warning
+              team: infrastructure
+            annotations:
+              summary: "Node high CPU usage"
+              description: "Node {{ $labels.instance }} CPU usage is above 90% for more than 15 minutes."
+
+          - alert: NodeHighMemoryUsage
+            expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+            for: 15m
+            labels:
+              severity: warning
+              team: infrastructure
+            annotations:
+              summary: "Node high memory usage"
+              description: "Node {{ $labels.instance }} memory usage is above 90%."
+
+          - alert: NodeDiskSpaceLow
+            expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"} * 100) < 10
+            for: 5m
+            labels:
+              severity: critical
+              team: infrastructure
+            annotations:
+              summary: "Node disk space low"
+              description: "Node {{ $labels.instance }} disk usage is above 90%."
+
+          # ============================================================================
+          # CLUSTER LEVEL ALERTS
+          # ============================================================================
+
+          - alert: TooManyPodsCrashLooping
+            expr: count(rate(kube_pod_container_status_restarts_total[5m]) > 0) > 5
+            for: 5m
+            labels:
+              severity: warning
+              team: infrastructure
+            annotations:
+              summary: "Too many pods are crash looping"
+              description: "More than 5 pods are crash looping in the cluster."
+
+          - alert: KubernetesAPIServerDown
+            expr: up{job="kubernetes-apiservers"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              team: infrastructure
+            annotations:
+              summary: "Kubernetes API server is down"
+              description: "Kubernetes API server has been down for more than 1 minute."
+
+          # ============================================================================
+          # NAMESPACE SPECIFIC ALERTS
+          # ============================================================================
+
+          - alert: BookworkNamespaceQuotaExceeded
+            expr: kube_resourcequota{namespace="bookwork",type="used"} / kube_resourcequota{namespace="bookwork",type="hard"} > 0.9
+            for: 5m
+            labels:
+              severity: warning
+              team: platform
+              namespace: bookwork
+            annotations:
+              summary: "Bookwork namespace quota nearly exceeded"
+              description: "Namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of its {{ $labels.resource }} quota."

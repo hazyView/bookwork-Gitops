@@ -18,6 +18,7 @@ spec:
   - hosts:
     - grafana.bookwork-demo.com
     - prometheus.bookwork-demo.com
+    - alertmanager.bookwork-demo.com
     secretName: observability-tls
   rules:
   - host: grafana.bookwork-demo.com
@@ -40,3 +41,13 @@ spec:
             name: prometheus
             port:
               number: 9090
+  - host: alertmanager.bookwork-demo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager
+            port:
+              number: 9093

@@ -76,6 +76,8 @@ spec:
           mountPath: /etc/prometheus
         - name: storage-volume
           mountPath: /prometheus
+        - name: rules-volume
+          mountPath: /etc/prometheus/rules
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -90,5 +92,12 @@ spec:
       - name: storage-volume
         emptyDir:
           sizeLimit: 10Gi
+      - name: rules-volume
+        projected:
+          sources:
+          - configMap:
+              name: prometheus-rules-frontend
+          - configMap:
+              name: prometheus-rules-kubernetes
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

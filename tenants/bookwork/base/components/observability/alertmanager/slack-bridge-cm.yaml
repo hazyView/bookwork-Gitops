@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-slack-bridge
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: alertmanager-slack-bridge
+    app.kubernetes.io/part-of: bookwork-observability
+data:
+  slack-bridge.py: |
+    #!/usr/bin/env python3
+    import json
+    import requests
+    import os
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from urllib.parse import urlparse
+    
+    # Slack webhook URL from environment variable
+    SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
+    SLACK_CHANNEL = os.getenv('SLACK_CHANNEL', 'C0958PSUQ74')  # Your ArgoCD channel
+    
+    class AlertHandler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                alert_data = json.loads(post_data.decode('utf-8'))
+                self.forward_to_slack(alert_data)
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'OK')
+            except Exception as e:
+                print(f"Error processing alert: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(b'Error')
+        
+        def forward_to_slack(self, alert_data):
+            if not SLACK_WEBHOOK_URL:
+                print("No Slack webhook URL configured")
+                return
+            
+            # Format alert for Slack
+            severity_emoji = {
+                'critical': '🚨',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            }
+            
+            alerts = alert_data.get('alerts', [])
+            if not alerts:
+                return
+            
+            # Group by severity
+            for alert in alerts:
+                severity = alert.get('labels', {}).get('severity', 'info')
+                emoji = severity_emoji.get(severity, '🔔')
+                
+                status = alert.get('status', 'firing')
+                summary = alert.get('annotations', {}).get('summary', 'Unknown alert')
+                description = alert.get('annotations', {}).get('description', '')
+                service = alert.get('labels', {}).get('service', 'Unknown service')
+                
+                # Create Slack message
+                slack_message = {
+                    "channel": f"#{SLACK_CHANNEL}",
+                    "username": "Prometheus Alertmanager",
+                    "icon_emoji": ":warning:",
+                    "attachments": [
+                        {
+                            "color": "danger" if severity == "critical" else "warning",
+                            "title": f"{emoji} {status.upper()}: {summary}",
+                            "text": description,
+                            "fields": [
+                                {
+                                    "title": "Service",
+                                    "value": service,
+                                    "short": True
+                                },
+                                {
+                                    "title": "Severity",
+                                    "value": severity.upper(),
+                                    "short": True
+                                }
+                            ],
+                            "ts": alert.get('startsAt', '')
+                        }
+                    ]
+                }
+                
+                # Send to Slack
+                try:
+                    response = requests.post(SLACK_WEBHOOK_URL, json=slack_message)
+                    print(f"Sent alert to Slack: {response.status_code}")
+                except Exception as e:
+                    print(f"Failed to send to Slack: {e}")
+    
+    if __name__ == "__main__":
+        server = HTTPServer(('0.0.0.0', 5001), AlertHandler)
+        print("Starting Alertmanager-Slack bridge on port 5001...")
+        server.serve_forever()
+  
+  requirements.txt: |
+    requests==2.31.0

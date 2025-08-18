@@ -11,6 +11,16 @@ resources:
 - prometheus/prom-cm.yaml
 - prometheus/prom-deployment.yaml
 - prometheus/prom-service.yaml
+# Alertmanager resources
+- alertmanager/alertmanager-sealed-secret.yaml
+- alertmanager/alertmanager-cm.yaml
+- alertmanager/alertmanager-deployment.yaml
+- alertmanager/alertmanager-service.yaml
+- alertmanager/slack-bridge-cm.yaml
+- alertmanager/slack-bridge-deployment.yaml
+- alertmanager/slack-bridge-service.yaml
+- alertmanager/frontend-rules.yaml
+- alertmanager/kubernetes-rules.yaml
 # Grafana resources
 - grafana/graf-cm.yaml
 - grafana/dashboards/bookwork-dashboard.yaml
