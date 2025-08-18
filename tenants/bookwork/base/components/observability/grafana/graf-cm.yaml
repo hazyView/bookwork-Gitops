@@ -22,9 +22,9 @@ data:
     disable_gravatar = true
     
     [users]
-    allow_sign_up = false
+    allow_sign_up = true
     auto_assign_org = true
-    auto_assign_org_role = Viewer
+    auto_assign_org_role = Admin
     
     [auth]
     disable_login_form = false
@@ -41,11 +41,11 @@ data:
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
-    # Explicitly disable organization and team features
+    # No team or org restrictions
     allowed_organizations = 
     team_ids = 
-    # Simple role mapping based on user login name
-    role_attribute_path = login == 'hazyView' && 'Admin' || 'Viewer'
+    # Don't use role mapping - let everyone be admin for now
+    auto_assign_org_role = Admin
     
     [log]
     mode = console
