@@ -41,10 +41,10 @@ data:
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
-    # No team or org restrictions
+    # Completely disable org/team restrictions 
     allowed_organizations = 
     team_ids = 
-    # Don't use role mapping - let everyone be admin for now
+    role_attribute_path = 
     auto_assign_org_role = Admin
     
     [log]

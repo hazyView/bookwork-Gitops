@@ -15,6 +15,10 @@ spec:
       labels:
         app: bookwork-api
         version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: api

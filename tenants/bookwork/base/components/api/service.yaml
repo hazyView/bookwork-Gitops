@@ -10,6 +10,7 @@ spec:
     app: bookwork-api
   ports:
     # This service exposes port 80, which will route to the container's port 8080
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080

@@ -85,6 +85,9 @@ data:
         - source_labels: [__meta_kubernetes_pod_name]
           action: replace
           target_label: kubernetes_pod_name
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          action: replace
+          target_label: kubernetes_container_name
 
       # Bookwork Frontend Application
       - job_name: 'bookwork-frontend'
