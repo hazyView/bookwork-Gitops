@@ -96,4 +96,4 @@ data:
               namespace: bookwork
             annotations:
               summary: "Bookwork namespace quota nearly exceeded"
-              description: "Namespace {{ $labels.namespace }} is using {{ $value | humanizePercentage }} of its {{ $labels.resource }} quota."
+              description: "Namespace {{ $labels.namespace }} is using {{ $value }}% of its {{ $labels.resource }} quota."

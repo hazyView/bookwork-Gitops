@@ -88,7 +88,7 @@ data:
               team: frontend
             annotations:
               summary: "Potential memory leak in Bookwork Frontend"
-              description: "Frontend container memory usage increased by {{ $value | humanizeBytes }} in the last hour."
+              description: "Frontend container memory usage increased by {{ $value }} bytes in the last hour."
 
           # ============================================================================
           # APPLICATION SPECIFIC ALERTS (HTTP/NGINX based)
