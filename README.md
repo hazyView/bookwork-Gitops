@@ -1,180 +1,133 @@
 # Bookwork GitOps Repository
 
-This repository contains the GitOps configuration for the Bookwork application, implementing a complete continuous deployment pipeline using ArgoCD on Kubernetes.
-
-## 🏗️ Architecture Overview
-
-The Bookwork application follows a microservices architecture with the following components:
-
-- **Frontend**: Web application served via NGINX
-- **API**: Backend service (currently disabled to avoid database costs)
-- **Infrastructure**: Shared resources including ingress, SSL certificates, and namespace management
-
-## 📁 Repository Structure
-
-```
-├── apps/                           # ArgoCD Application definitions
-│   ├── app-of-apps/
-│   │   └── bookwork-apps.yaml     # Root application managing all sub-applications
-│   └── bookwork/
-│       ├── api.yaml               # API application configuration
-│       ├── frontend.yaml          # Frontend application configuration
-│       └── infrastructure.yaml   # Infrastructure application configuration
-├── bootstrap/                     # ArgoCD cluster-level configuration
-│   ├── argocd-cm.yaml            # ArgoCD ConfigMap with customizations
-│   ├── argocd-rbac-cm.yaml       # Role-based access control
-│   ├── argocd-notifications-cm.yaml # Slack notification templates
-│   ├── argocd-server-ingress.yaml   # ArgoCD UI ingress configuration
-│   ├── bookwork-project.yaml        # ArgoCD project definition
-│   └── ...                          # Additional ArgoCD configuration files
-├── tenants/bookwork/base/         # Application manifests
-│   ├── kustomization.yaml         # Main Kustomize configuration
-│   └── components/
-│       ├── api/                   # API service resources
-│       ├── frontend/              # Frontend service resources
-│       └── infrastructure/       # Shared infrastructure resources
-└── clusters/                     # Environment-specific configurations
-    ├── base/                     # Base cluster configuration (empty)
-    └── overlays/production/      # Production environment overrides (empty)
-```
-
-## 🚀 Deployment Strategy
-
-### App of Apps Pattern
-This repository implements the "App of Apps" pattern where:
-1. **Root Application** (`bookwork-apps`) manages all child applications
-2. **Child Applications** manage specific components (API, Frontend, Infrastructure)
-
-### Sync Waves
-Deployment order is controlled using ArgoCD sync waves:
-- **Wave 0**: Infrastructure (namespace, SSL issuer, secrets)
-- **Wave 1**: Services and ingress
-- **Wave 2**: Application deployments
-
-### Automated Sync Policy
-- **Frontend**: Fully automated with auto-prune and self-heal
-- **API**: Manual sync for production control (auto-prune disabled)
-- **Infrastructure**: Fully automated with namespace creation
-
-## 🔧 Configuration Details
-
-### Container Images
-Images are managed through Google Cloud Artifact Registry:
-- **Frontend**: `us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend:678c345`
-- **API**: `us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-api:6fb3352`
-
-### Domain Configuration
-- **Application**: `bookwork-demo.com` and `www.bookwork-demo.com`
-- **ArgoCD UI**: `argocd.bookwork-demo.com`
-
-### SSL/TLS
-- Automated certificate management via Cert-Manager
-- Let's Encrypt ACME v2 certificates
-- HTTP01 challenge solver with NGINX ingress
-
-### Security Features
-- **Sealed Secrets**: Encrypted secret management for API credentials
-- **RBAC**: Role-based access control with GitHub OAuth integration
-- **Project Restrictions**: Limited source repositories and deployment destinations
-- **Sync Windows**: Deployment restrictions during business hours (9 AM - 5 PM, Mon-Fri, America/Chicago)
-
-## 🔔 Monitoring & Notifications
-
-### Slack Integration
-Comprehensive Slack notifications for:
-- ✅ Application creation and restoration
-- 🚨 Sync failures and health degradation
-- ⚠️ Out-of-sync applications
-- 🗑️ Application deletion
-
-### Resource Exclusions
-ArgoCD is configured to ignore noisy Kubernetes resources:
-- Network endpoints and endpoint slices
-- Coordination leases
-- Authentication/authorization reviews
-- Certificate requests
-- Cilium internal resources
-- Kyverno policy reports
-
-## 🚦 Current Status
-
-### Active Components
-- ✅ **Frontend**: Deployed and running (2 replicas)
-- ✅ **Infrastructure**: Namespace, ingress, and SSL configured
-- ✅ **ArgoCD**: Fully configured with GitHub OAuth and notifications
-
-### Disabled Components
-- ❌ **API**: Currently disabled to avoid database costs
-  - Deployment and service manifests are commented out
-  - Only sealed secrets are deployed
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Kubernetes cluster with NGINX Ingress Controller
-- ArgoCD installed and configured
-- Cert-Manager for SSL certificate management
-- Sealed Secrets controller
-
-### Initial Setup
-1. Apply ArgoCD bootstrap configuration:
-   ```bash
-   kubectl apply -f bootstrap/
-   ```
-
-2. Deploy the root application:
-   ```bash
-   kubectl apply -f apps/app-of-apps/bookwork-apps.yaml
-   ```
-
-### Enabling API Component
-To enable the API component:
-1. Uncomment deployment and service resources in `tenants/bookwork/base/components/api/kustomization.yaml`
-2. Ensure database is available and configured
-3. Commit changes to trigger ArgoCD sync
-
-## 🔐 Access Control
-
-### GitHub OAuth Integration
-- **Client ID**: `Ov23likhDtqBQD2g46ax`
-- **Callback URL**: `https://argocd.bookwork-demo.com/api/dex/callback`
-
-### User Roles
-- **Admin Access**: `hazyView`, `flmarin86@gmail.com`, user ID `200641523`
-- **Default Access**: Read-only for all authenticated users
-
-## 📊 Project Governance
-
-### AppProject Configuration
-- **Source Restrictions**: Limited to this GitOps repository
-- **Destination Restrictions**: Specific namespaces (bookwork, argocd, ingress-nginx, cert-manager)
-- **Resource Whitelist**: Controlled resource types for security
-- **Sync Windows**: Business hours deployment restrictions
-
-## 🚨 Troubleshooting
-
-### Common Issues
-1. **Sync Failures**: Check ArgoCD UI and Slack notifications
-2. **SSL Certificate Issues**: Verify Cert-Manager logs and DNS configuration
-3. **Access Denied**: Ensure proper RBAC configuration and GitHub team membership
-
-### Monitoring Resources
-- ArgoCD UI: `https://argocd.bookwork-demo.com`
-- Application: `https://bookwork-demo.com`
-- Slack notifications: Channel `C0958PSUQ74`
-
-## 📝 Maintenance
-
-### Updating Container Images
-Images are updated via Kustomize image transformations. Update the `newTag` values in:
-- `tenants/bookwork/base/kustomization.yaml` (main configuration)
-- Component-specific `kustomization.yaml` files
-
-### Configuration Changes
-All configuration changes should be made via Git commits to this repository. ArgoCD will automatically detect and sync changes based on the configured sync policies.
+This repository contains the GitOps configuration for the Bookwork application, delivered as ArgoCD Applications and Kustomize manifests. It is intended to boot, configure, and continuously deploy the Bookwork tenant into a Kubernetes cluster using an App-of-Apps pattern.
 
 ---
 
-**Repository**: [hazyView/bookwork-gitops](https://github.com/hazyView/bookwork-gitops.git)  
-**Maintainer**: Fred Lopez (flmarin86@gmail.com)  
-**Last Updated**: August 14, 2025
+## Repository layout (top-level)
+
+```text
+Repository root
+├─ bootstrap/                 # ArgoCD bootstrapping (ConfigMaps, RBAC, secrets, ingress)
+├─ apps/                      # ArgoCD Application CRs
+│  ├─ app-of-apps/            # Root App-of-Apps (points at tenants/bookwork/base)
+│  └─ bookwork/               # Per-component Applications (infrastructure, frontend, api)
+├─ tenants/bookwork/base/     # Kustomize tenant layer (components + kustomization)
+│  ├─ components/
+│  │  ├─ infrastructure/      # namespace, ingress, letsencrypt issuer (wave 0)
+│  │  ├─ frontend/            # Deployment + Service (wave 10)
+│  │  ├─ api/                 # SealedSecret (deployment/service commented out, wave 20)
+│  │  └─ observability/       # Prometheus, Grafana, Alertmanager, dashboards
+│  └─ kustomization.yaml      # image tags + component references
+├─ grafana-github-oauth-sealed.yaml  # Optional top-level SealedSecret for Grafana OAuth
+└─ clusters/                  # Cluster overlays (minimal/empty)
+```
+
+---
+
+## Components and current operational status
+
+- Frontend
+  - Location: `tenants/bookwork/base/components/frontend`
+  - Kustomize: exposes a Deployment and Service
+  - ArgoCD App: `apps/bookwork/frontend.yaml`
+  - Sync policy: automated with prune and self-heal
+  - Image configured via kustomize (image tag present in `tenants/bookwork/base` and component kustomization)
+
+- Infrastructure
+  - Location: `tenants/bookwork/base/components/infrastructure`
+  - Includes: Namespace, Ingress, Let's Encrypt Issuer
+  - ArgoCD App: `apps/bookwork/infrastructure.yaml`
+  - Sync policy: automated, CreateNamespace enabled
+
+- API (backend)
+  - Location: `tenants/bookwork/base/components/api`
+  - Current state: Deployment and Service are commented out in the component kustomization and tenant kustomization to avoid database costs; only the SealedSecret is applied by default
+  - ArgoCD App: `apps/bookwork/api.yaml`
+  - Sync policy: automated with self-heal but `prune: false` (manual control intended)
+  - To enable: uncomment `deployment.yaml` and `service.yaml` in `tenants/bookwork/base/components/api/kustomization.yaml` (and the tenant-level overrides if applicable)
+
+- Observability
+  - Location: `tenants/bookwork/base/components/observability`
+  - Includes Prometheus, Grafana, Alertmanager, dashboard resources, ServiceMonitors, and sealed secrets
+  - Grafana GitHub OAuth config exists as a SealedSecret in `tenants/.../grafana/graf-sealed-secret.yaml` and at repo root as `grafana-github-oauth-sealed.yaml`
+
+---
+
+## ArgoCD / App-of-Apps configuration
+
+- Root Application: `apps/app-of-apps/bookwork-apps.yaml`
+  - Points to `tenants/bookwork/base`
+  - Automated sync with `prune: true` and `selfHeal: true`
+  - `CreateNamespace=true` set on syncOptions to ensure `bookwork` namespace is created if missing
+- Per-component sync waves (declared via Application `info` entries):
+  - Infrastructure: Wave 0
+  - Frontend: Wave 10
+  - API: Wave 20
+- Notifications
+  - Slack channel ID used across Application manifests: `C0958PSUQ74` (ArgoCD Notifications annotations present)
+- Dex / GitHub OAuth
+  - `bootstrap/argocd-cm.yaml` configures Dex GitHub connector
+  - Client ID appears in `bootstrap/argocd-cm.yaml` and the client secret is stored in `bootstrap/argocd-github-oauth-secret.yaml` (base64-encoded)
+
+---
+
+## Image management
+
+Images are managed with Kustomize image transformations. The tenant kustomization contains entries for:
+- `bookwork-frontend` image (tag present in `tenants/bookwork/base/kustomization.yaml`)
+- `bookwork-api` image (tag present but API deployment is currently commented out)
+
+When updating images, update the `newTag` values in the relevant `kustomization.yaml` files and commit.
+
+---
+
+## Prerequisites for cluster and deployment
+
+- Kubernetes cluster (tested with a standard managed or upstream cluster)
+- NGINX Ingress Controller (Ingress manifests assume NGINX)
+- Cert-Manager (for Let's Encrypt issuer and Certificate resources)
+- ArgoCD installed in the cluster
+- Sealed Secrets controller (Bitnami SealedSecrets) to decrypt/apply sealed secrets
+
+---
+
+## Quick bootstrap and deployment steps
+
+1. Install required controllers on the cluster if not already present: NGINX Ingress, Cert-Manager, SealedSecrets, ArgoCD.
+2. Apply ArgoCD bootstrap resources (config, RBAC, secrets, ingress):
+
+   kubectl apply -f bootstrap/
+
+3. Create the root App-of-Apps (alternatively you can apply the single Application CRs in `apps/`):
+
+   kubectl apply -f apps/app-of-apps/bookwork-apps.yaml
+
+4. Monitor ArgoCD UI (configured URL in `argocd-cm.yaml`) and the Applications created under the `bookwork` project.
+
+Notes:
+- The API Application is intentionally conservative: it is set to `prune: false` so you retain manual control over rollouts when you enable it.
+
+---
+
+## How to enable the API component
+
+1. Edit `tenants/bookwork/base/components/api/kustomization.yaml` and remove the comment markers for `deployment.yaml` and `service.yaml` (they are intentionally commented out).
+2. Ensure any required backing services (database) are available and configured.
+3. Commit the change and allow ArgoCD to sync the tenant or manually sync the `bookwork-api` Application if it exists.
+
+---
+
+## Security and secrets
+
+- SealedSecrets are used to keep sensitive data encrypted in the repository. The repository contains sealed secrets for Grafana and other observability/auth components.
+- The ArgoCD GitHub OAuth client secret is stored in `bootstrap/argocd-github-oauth-secret.yaml` as a Kubernetes Secret (base64-encoded string). Treat that file accordingly and rotate credentials as needed.
+
+---
+
+## Maintainers
+
+- Repository: hazyView/bookwork-gitops
+- Maintainer: Fred Lopez
+
+Last Updated: 2025-08-19
