@@ -5,6 +5,10 @@ metadata:
   namespace: bookwork
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: bookwork-frontend
+    app.kubernetes.io/part-of: bookwork
+    app.kubernetes.io/component: frontend
 spec:
   replicas: 2
   selector:
@@ -14,6 +18,9 @@ spec:
     metadata:
       labels:
         app: bookwork-frontend
+        app.kubernetes.io/name: bookwork-frontend
+        app.kubernetes.io/part-of: bookwork
+        app.kubernetes.io/component: frontend
         version: v1
       annotations:
         prometheus.io/scrape: "true"
@@ -24,4 +31,25 @@ spec:
         - name: frontend
           image: "us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend" # This will be updated by CI/CD
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

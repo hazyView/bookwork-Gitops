@@ -91,11 +91,11 @@ data:
               description: "Frontend container memory usage increased by {{ $value }} bytes in the last hour."
 
           # ============================================================================
-          # APPLICATION SPECIFIC ALERTS (HTTP/NGINX based)
+          # APPLICATION SPECIFIC ALERTS (Application Metrics)
           # ============================================================================
 
           - alert: BookworkFrontendHighErrorRate
-            expr: (rate(nginx_ingress_controller_requests{service="bookwork-frontend",status=~"5.."}[5m]) / rate(nginx_ingress_controller_requests{service="bookwork-frontend"}[5m]) * 100) > 5
+            expr: (sum(rate(error_count{job="bookwork-frontend"}[5m])) / sum(rate(request_count{job="bookwork-frontend"}[5m])) * 100) > 5
             for: 5m
             labels:
               severity: critical
@@ -103,10 +103,10 @@ data:
               team: frontend
             annotations:
               summary: "Bookwork Frontend high error rate"
-              description: "Frontend error rate is {{ $value }}% which is above the 5% threshold."
+              description: "Frontend application error rate is {{ $value }}% which is above the 5% threshold."
 
           - alert: BookworkFrontendHighLatency
-            expr: histogram_quantile(0.95, rate(nginx_ingress_controller_request_duration_seconds_bucket{service="bookwork-frontend"}[5m])) > 2
+            expr: histogram_quantile(0.95, sum(rate(request_latency_seconds_bucket{job="bookwork-frontend"}[5m])) by (le)) > 2
             for: 10m
             labels:
               severity: warning
@@ -114,10 +114,10 @@ data:
               team: frontend
             annotations:
               summary: "Bookwork Frontend high latency"
-              description: "95th percentile latency is {{ $value }}s which is above 2s threshold."
+              description: "95th percentile application latency is {{ $value }}s which is above 2s threshold."
 
           - alert: BookworkFrontendLowTraffic
-            expr: rate(nginx_ingress_controller_requests{service="bookwork-frontend"}[5m]) < 0.1
+            expr: sum(rate(request_count{job="bookwork-frontend"}[5m])) < 0.1
             for: 30m
             labels:
               severity: info
@@ -126,6 +126,98 @@ data:
             annotations:
               summary: "Bookwork Frontend unusually low traffic"
               description: "Frontend is receiving less than 6 requests per minute for 30 minutes."
+
+          - alert: BookworkFrontendHighComponentErrors
+            expr: sum(rate(bookwork_frontend_component_errors_total{job="bookwork-frontend"}[5m])) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend component errors detected"
+              description: "Frontend components are experiencing errors at {{ $value }} errors/sec."
+
+          - alert: BookworkFrontendSlowComponentLoading
+            expr: histogram_quantile(0.95, sum(rate(bookwork_frontend_component_load_duration_seconds_bucket{job="bookwork-frontend"}[5m])) by (le, component)) > 5
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend slow component loading"
+              description: "Component {{ $labels.component }} is taking more than 5s to load (P95: {{ $value }}s)."
+
+          - alert: BookworkFrontendLowCacheHitRate
+            expr: (sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) / (sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) + sum(rate(bookwork_frontend_cache_misses_total{job="bookwork-frontend"}[5m])))) * 100 < 70
+            for: 15m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend low cache hit rate"
+              description: "Cache hit rate is {{ $value }}% which is below the 70% threshold."
+
+          - alert: BookworkFrontendHighRateLimitHits
+            expr: sum(rate(bookwork_frontend_rate_limit_hits_total{job="bookwork-frontend"}[5m])) > 1
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend hitting rate limits"
+              description: "Frontend is hitting rate limits at {{ $value }} hits/sec."
+
+          - alert: BookworkFrontendSecurityEvents
+            expr: sum(rate(bookwork_frontend_security_events_total{job="bookwork-frontend"}[5m])) > 0
+            for: 1m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: security
+            annotations:
+              summary: "Bookwork Frontend security events detected"
+              description: "Security events detected: {{ $value }} events/sec. Event types: {{ $labels.event_type }}."
+
+          - alert: BookworkFrontendSessionsHigh
+            expr: bookwork_frontend_active_sessions{job="bookwork-frontend"} > 1000
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend high session count"
+              description: "Active sessions count is {{ $value }}, which is above the 1000 threshold."
+
+          # ============================================================================
+          # FALLBACK NGINX INGRESS ALERTS (Secondary monitoring)
+          # ============================================================================
+
+          - alert: BookworkFrontendNginxHighErrorRate
+            expr: (rate(nginx_ingress_controller_requests{service="bookwork-frontend",status=~"5.."}[5m]) / rate(nginx_ingress_controller_requests{service="bookwork-frontend"}[5m]) * 100) > 5
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend NGINX high error rate"
+              description: "Frontend NGINX error rate is {{ $value }}% which is above the 5% threshold (fallback alert)."
+
+          - alert: BookworkFrontendNginxHighLatency
+            expr: histogram_quantile(0.95, rate(nginx_ingress_controller_request_duration_seconds_bucket{service="bookwork-frontend"}[5m])) > 2
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Bookwork Frontend NGINX high latency"
+              description: "95th percentile NGINX latency is {{ $value }}s which is above 2s threshold (fallback alert)."
 
           # ============================================================================
           # INFRASTRUCTURE ALERTS

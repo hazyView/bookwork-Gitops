@@ -10,18 +10,18 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/part-of: bookwork-observability
 data:
-  bookwork-overview.json: |
+  bookwork-frontend.json: |
     {
       "dashboard": {
         "id": null,
-        "title": "Bookwork Application Overview",
-        "tags": ["bookwork", "overview"],
+        "title": "Bookwork Frontend Application Metrics",
+        "tags": ["bookwork", "frontend", "application"],
         "style": "dark",
         "timezone": "browser",
         "panels": [
           {
             "id": 1,
-            "title": "Frontend Availability",
+            "title": "Service Availability",
             "type": "stat",
             "targets": [
               {
@@ -36,116 +36,390 @@ data:
                     {"color": "red", "value": 0},
                     {"color": "green", "value": 1}
                   ]
-                }
+                },
+                "mappings": [
+                  {"options": {"0": {"text": "DOWN"}}, "type": "value"},
+                  {"options": {"1": {"text": "UP"}}, "type": "value"}
+                ]
               }
             },
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
           },
           {
             "id": 2,
-            "title": "Frontend Request Rate",
-            "type": "graph",
+            "title": "Request Rate (RPS)",
+            "type": "stat",
             "targets": [
               {
-                "expr": "rate(nginx_ingress_controller_requests_total{ingress=\"bookwork-ingress\"}[5m])",
+                "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m]))",
                 "legendFormat": "Requests/sec"
               }
             ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqps",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 50},
+                    {"color": "red", "value": 100}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
           },
           {
             "id": 3,
-            "title": "Frontend Response Time",
-            "type": "graph",
+            "title": "Error Rate",
+            "type": "stat",
             "targets": [
               {
-                "expr": "histogram_quantile(0.95, rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress=\"bookwork-ingress\"}[5m]))",
-                "legendFormat": "95th percentile"
-              },
-              {
-                "expr": "histogram_quantile(0.50, rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress=\"bookwork-ingress\"}[5m]))",
-                "legendFormat": "50th percentile"
+                "expr": "sum(rate(error_count{job=\"bookwork-frontend\"}[5m])) / sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) * 100",
+                "legendFormat": "Error Rate %"
               }
             ],
-            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
           },
           {
             "id": 4,
-            "title": "Pod Resource Usage",
-            "type": "graph",
+            "title": "P95 Response Time",
+            "type": "stat",
             "targets": [
               {
-                "expr": "rate(container_cpu_usage_seconds_total{namespace=\"bookwork\"}[5m]) * 100",
-                "legendFormat": "CPU % - {{pod}}"
+                "expr": "histogram_quantile(0.95, sum(rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m])) by (le))",
+                "legendFormat": "P95 Latency"
               }
             ],
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 0.5},
+                    {"color": "red", "value": 1}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
           },
           {
             "id": 5,
-            "title": "Memory Usage",
+            "title": "HTTP Request Rate by Route",
             "type": "graph",
             "targets": [
               {
-                "expr": "container_memory_usage_bytes{namespace=\"bookwork\"} / 1024 / 1024",
-                "legendFormat": "Memory MB - {{pod}}"
+                "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) by (route)",
+                "legendFormat": "{{route}}"
               }
             ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+            "yAxes": [
+              {"unit": "reqps", "label": "Requests/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+          },
+          {
+            "id": 6,
+            "title": "Response Time Percentiles",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, sum(rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m])) by (le))",
+                "legendFormat": "P50"
+              },
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m])) by (le))",
+                "legendFormat": "P95"
+              },
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m])) by (le))",
+                "legendFormat": "P99"
+              }
+            ],
+            "yAxes": [
+              {"unit": "s", "label": "Response Time"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+          },
+          {
+            "id": 7,
+            "title": "HTTP Status Codes",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) by (status)",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Requests/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+          },
+          {
+            "id": 8,
+            "title": "Page Load Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_page_loads_total{job=\"bookwork-frontend\"}[5m])) by (page)",
+                "legendFormat": "{{page}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Page Loads/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+          },
+          {
+            "id": 9,
+            "title": "Component Load Times",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(bookwork_frontend_component_load_duration_seconds_bucket{job=\"bookwork-frontend\"}[5m])) by (le, component))",
+                "legendFormat": "{{component}} P95"
+              }
+            ],
+            "yAxes": [
+              {"unit": "s", "label": "Load Time"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+          },
+          {
+            "id": 10,
+            "title": "Cache Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_cache_hits_total{job=\"bookwork-frontend\"}[5m])) by (cache_type)",
+                "legendFormat": "{{cache_type}} hits"
+              },
+              {
+                "expr": "sum(rate(bookwork_frontend_cache_misses_total{job=\"bookwork-frontend\"}[5m])) by (cache_type)",
+                "legendFormat": "{{cache_type}} misses"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Cache ops/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+          },
+          {
+            "id": 11,
+            "title": "Cache Hit Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_cache_hits_total{job=\"bookwork-frontend\"}[5m])) / (sum(rate(bookwork_frontend_cache_hits_total{job=\"bookwork-frontend\"}[5m])) + sum(rate(bookwork_frontend_cache_misses_total{job=\"bookwork-frontend\"}[5m]))) * 100",
+                "legendFormat": "Cache Hit Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 70},
+                    {"color": "green", "value": 90}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 28}
+          },
+          {
+            "id": 12,
+            "title": "Active Sessions",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "bookwork_frontend_active_sessions{job=\"bookwork-frontend\"}",
+                "legendFormat": "Active Sessions"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 100},
+                    {"color": "red", "value": 500}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 28}
+          },
+          {
+            "id": 13,
+            "title": "Rate Limit Hits",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_rate_limit_hits_total{job=\"bookwork-frontend\"}[5m])) by (endpoint)",
+                "legendFormat": "{{endpoint}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Rate Limit Hits/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+          },
+          {
+            "id": 14,
+            "title": "Security Events",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_security_events_total{job=\"bookwork-frontend\"}[5m])) by (event_type)",
+                "legendFormat": "{{event_type}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Security Events/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+          },
+          {
+            "id": 15,
+            "title": "Component Errors",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(bookwork_frontend_component_errors_total{job=\"bookwork-frontend\"}[5m])) by (component)",
+                "legendFormat": "{{component}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Component Errors/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40}
           }
         ],
         "time": {"from": "now-1h", "to": "now"},
         "refresh": "5s"
       }
     }
-  kubernetes-cluster.json: |
+  bookwork-infrastructure.json: |
     {
       "dashboard": {
         "id": null,
-        "title": "Kubernetes Cluster Metrics",
-        "tags": ["kubernetes", "cluster"],
+        "title": "Bookwork Infrastructure Metrics",
+        "tags": ["bookwork", "infrastructure", "kubernetes"],
         "style": "dark",
         "timezone": "browser",
         "panels": [
           {
             "id": 1,
-            "title": "Cluster Nodes",
+            "title": "Pod Status",
             "type": "stat",
             "targets": [
               {
-                "expr": "count(up{job=\"kubernetes-nodes\"})",
-                "legendFormat": "Total Nodes"
+                "expr": "count(kube_pod_info{namespace=\"bookwork\"})",
+                "legendFormat": "Total Pods"
               },
               {
-                "expr": "count(up{job=\"kubernetes-nodes\"} == 1)",
-                "legendFormat": "Ready Nodes"
+                "expr": "count(kube_pod_status_phase{namespace=\"bookwork\", phase=\"Running\"})",
+                "legendFormat": "Running Pods"
               }
             ],
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+            "gridPos": {"h": 4, "w": 12, "x": 0, "y": 0}
           },
           {
             "id": 2,
-            "title": "Pod Status",
+            "title": "CPU Usage by Pod",
             "type": "graph",
             "targets": [
               {
-                "expr": "count by (phase) (kube_pod_status_phase)",
-                "legendFormat": "{{phase}}"
+                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"bookwork\", container!=\"POD\", container!=\"\"}[5m])) by (pod) * 100",
+                "legendFormat": "{{pod}}"
               }
             ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+            "yAxes": [
+              {"unit": "percent", "label": "CPU %"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
           },
           {
             "id": 3,
-            "title": "CPU Usage by Node",
+            "title": "Memory Usage by Pod",
             "type": "graph",
             "targets": [
               {
-                "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
-                "legendFormat": "{{instance}}"
+                "expr": "sum(container_memory_working_set_bytes{namespace=\"bookwork\", container!=\"POD\", container!=\"\"}) by (pod) / 1024 / 1024",
+                "legendFormat": "{{pod}}"
               }
             ],
-            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+            "yAxes": [
+              {"unit": "MB", "label": "Memory Usage"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+          },
+          {
+            "id": 4,
+            "title": "Network I/O",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"bookwork\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}} RX"
+              },
+              {
+                "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"bookwork\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}} TX"
+              }
+            ],
+            "yAxes": [
+              {"unit": "Bps", "label": "Bytes/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12}
+          },
+          {
+            "id": 5,
+            "title": "Ingress Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(nginx_ingress_controller_requests_total{ingress=~\".*bookwork.*\"}[5m])) by (ingress)",
+                "legendFormat": "{{ingress}}"
+              }
+            ],
+            "yAxes": [
+              {"unit": "reqps", "label": "Requests/sec"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+          },
+          {
+            "id": 6,
+            "title": "Ingress Response Times",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress=~\".*bookwork.*\"}[5m])) by (le, ingress))",
+                "legendFormat": "{{ingress}} P95"
+              }
+            ],
+            "yAxes": [
+              {"unit": "s", "label": "Response Time"}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
           }
         ],
         "time": {"from": "now-1h", "to": "now"},
