@@ -285,3 +285,139 @@ data:
             annotations:
               summary: "Bookwork Frontend has recovered"
               description: "Bookwork Frontend service {{ $labels.instance }} is now responding to health checks."
+
+          # ============================================================================
+          # COMPREHENSIVE METRICS-BASED ALERTS (from metrics.ts)
+          # ============================================================================
+
+          # High Error Rate Alert (using standardized error_count metric)
+          - alert: HighErrorRate
+            expr: sum(rate(error_count[5m])) / sum(rate(request_count[5m])) * 100 > 5
+            for: 2m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High error rate detected in Bookwork Frontend"
+              description: "Error rate is {{ $value }}% which is above the 5% threshold"
+
+          # High Latency Alert (using standardized request_latency metric)
+          - alert: HighLatency
+            expr: histogram_quantile(0.95, rate(request_latency_seconds_bucket[5m])) > 1
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High latency detected in Bookwork Frontend"
+              description: "95th percentile latency is {{ $value }}s which is above 1s threshold"
+
+          # Low Cache Hit Rate
+          - alert: LowCacheHitRate
+            expr: sum(rate(bookwork_frontend_cache_hits_total[5m])) / (sum(rate(bookwork_frontend_cache_hits_total[5m])) + sum(rate(bookwork_frontend_cache_misses_total[5m]))) * 100 < 70
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Low cache hit rate in Bookwork Frontend"
+              description: "Cache hit rate is {{ $value }}% which is below 70% threshold"
+
+          # High Component Error Rate
+          - alert: HighComponentErrorRate
+            expr: sum(rate(bookwork_frontend_component_errors_total[5m])) > 0.1
+            for: 3m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High component error rate in Bookwork Frontend"
+              description: "Component error rate is {{ $value }} errors/sec"
+
+          # Security Events Spike
+          - alert: SecurityEventsSpike
+            expr: increase(bookwork_frontend_security_events_total[1h]) > 10
+            for: 0m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Security events spike detected in Bookwork Frontend"
+              description: "{{ $value }} security events detected in the last hour"
+
+          # Rate Limiting Active
+          - alert: RateLimitingActive
+            expr: sum(rate(bookwork_frontend_rate_limit_hits_total[5m])) > 1
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Rate limiting is actively being triggered"
+              description: "Rate limit hits: {{ $value }} hits/sec"
+
+          # High Memory Usage
+          - alert: HighMemoryUsage
+            expr: bookwork_frontend_process_resident_memory_bytes / 1024 / 1024 > 512
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High memory usage in Bookwork Frontend"
+              description: "Memory usage is {{ $value }}MB which is above 512MB threshold"
+
+          # High CPU Usage
+          - alert: HighCPUUsage
+            expr: rate(bookwork_frontend_process_cpu_seconds_total[5m]) * 100 > 80
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High CPU usage in Bookwork Frontend"
+              description: "CPU usage is {{ $value }}% which is above 80% threshold"
+
+          # Low Active Sessions (might indicate an issue)
+          - alert: LowActiveSessions
+            expr: bookwork_frontend_active_sessions < 1
+            for: 15m
+            labels:
+              severity: info
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Very low user activity"
+              description: "Active sessions: {{ $value }} - this might indicate an issue or just low traffic"
+
+          # High Request Rate (potential DDoS or traffic spike)
+          - alert: HighRequestRate
+            expr: sum(rate(request_count[5m])) > 200
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "High request rate detected"
+              description: "Request rate is {{ $value }} req/sec which is unusually high"
+
+          # Component Load Time Too High
+          - alert: SlowComponentLoading
+            expr: histogram_quantile(0.95, rate(bookwork_frontend_component_load_duration_seconds_bucket[5m])) > 2
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Slow component loading detected"
+              description: "95th percentile component load time is {{ $value }}s which is above 2s threshold"
