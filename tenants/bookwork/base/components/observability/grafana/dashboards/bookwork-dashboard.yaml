@@ -12,12 +12,11 @@ metadata:
 data:
   bookwork-infrastructure.json: |
     {
-      "dashboard": {
-        "id": null,
-        "title": "Bookwork Infrastructure Metrics",
-        "tags": ["bookwork", "infrastructure", "kubernetes"],
-        "style": "dark",
-        "timezone": "browser",
+      "id": null,
+      "title": "Bookwork Infrastructure Metrics",
+      "tags": ["bookwork", "infrastructure", "kubernetes"],
+      "style": "dark",
+      "timezone": "browser",
         "panels": [
           {
             "id": 1,
@@ -133,16 +132,14 @@ data:
         "time": {"from": "now-1h", "to": "now"},
         "refresh": "30s"
       }
-    }
 
   bookwork-frontend-comprehensive.json: |
     {
-      "dashboard": {
-        "id": null,
-        "title": "Bookwork Frontend Metrics - Comprehensive",
-        "tags": ["bookwork", "frontend", "sveltekit", "comprehensive"],
-        "style": "dark",
-        "timezone": "browser",
+      "id": null,
+      "title": "Bookwork Frontend Metrics - Comprehensive",
+      "tags": ["bookwork", "frontend", "sveltekit", "comprehensive"],
+      "style": "dark",
+      "timezone": "browser",
         "refresh": "30s",
         "time": {
           "from": "now-1h",
@@ -435,4 +432,3 @@ data:
           ]
         }
       }
-    }
