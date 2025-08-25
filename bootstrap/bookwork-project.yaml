@@ -55,4 +55,6 @@ spec:
       kind: Ingress
     - group: 'bitnami.com'
       kind: SealedSecret
+    - group: 'monitoring.coreos.com'
+      kind: ServiceMonitor
       

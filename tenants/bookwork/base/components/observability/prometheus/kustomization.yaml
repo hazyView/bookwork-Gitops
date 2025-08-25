@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
 - prom-rbac.yaml
 - prom-cm.yaml
-- prom-pvc.yaml
 - prom-deployment.yaml
 - prom-service.yaml
 - prom-servicemonitor.yaml
