@@ -27,6 +27,8 @@ spec:
       server: 'https://kubernetes.default.svc'
     - namespace: monitoring
       server: 'https://kubernetes.default.svc'
+    - namespace: kube-system
+      server: 'https://kubernetes.default.svc'
   # Allow only specific safe cluster-scoped resources to be created
   clusterResourceWhitelist:
     - group: ''
