@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bookwork-bootstrap
+  namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-out-of-sync.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-created.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-deleted.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-app-restored.slack: "C0958PSUQ74"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: bookwork
+  source:
+    repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
+    path: bootstrap/apps
+    targetRevision: HEAD
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

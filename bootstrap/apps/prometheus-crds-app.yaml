@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-operator-crds
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
+spec:
+  project: bookwork
+  source:
+    repoURL: https://github.com/hazyView/bookwork-gitops.git
+    targetRevision: HEAD
+    path: bootstrap
+    directory:
+      include: "prometheus-operator-crds.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+      - Replace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
