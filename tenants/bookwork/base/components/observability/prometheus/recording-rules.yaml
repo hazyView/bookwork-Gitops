@@ -204,9 +204,9 @@ data:
             expr: |
               (
                 (bookwork:frontend_availability_percent / 100) * 0.4 +
-                (1 - min(bookwork:frontend_error_rate_percent / 100, 1)) * 0.3 +
-                (1 - min(bookwork:frontend_latency_p95, 5) / 5) * 0.2 +
-                (min(bookwork:frontend_cache_hit_rate, 100) / 100) * 0.1
+                (1 - clamp_max(bookwork:frontend_error_rate_percent / 100, 1)) * 0.3 +
+                (1 - clamp_max(bookwork:frontend_latency_p95, 5) / 5) * 0.2 +
+                (clamp_max(bookwork:frontend_cache_hit_rate, 100) / 100) * 0.1
               ) * 100
             labels:
               service: bookwork-frontend
