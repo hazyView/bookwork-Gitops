@@ -102,6 +102,16 @@ data:
       - BackgroundScanReport
       - ClusterBackgroundScanReport
       - UpdateRequest
+  resource.inclusions: |
+    ### Include Pods and ReplicaSets to show in ArgoCD UI for better visibility
+    - apiGroups:
+      - ''
+      kinds:
+      - Pod
+    - apiGroups:
+      - apps
+      kinds:
+      - ReplicaSet
   url: https://argocd.bookwork-demo.com
 kind: ConfigMap
 metadata:
