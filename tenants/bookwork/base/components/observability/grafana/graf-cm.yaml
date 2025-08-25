@@ -24,7 +24,7 @@ data:
     [users]
     allow_sign_up = true
     auto_assign_org = true
-    auto_assign_org_role = Admin
+    auto_assign_org_role = Viewer
     
     [auth]
     disable_login_form = false
@@ -37,7 +37,7 @@ data:
     allow_sign_up = true
     client_id = ${GF_AUTH_GITHUB_CLIENT_ID}
     client_secret = ${GF_AUTH_GITHUB_CLIENT_SECRET}
-    scopes = user:email
+    scopes = user:email,read:org
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
@@ -47,8 +47,8 @@ data:
     role_attribute_path = 
     # Grant read-only access to GitHub users
     auto_assign_org_role = Viewer
-    # Skip organization role synchronization to prevent team API calls
-    skip_org_role_sync = true
+    # Disable admin assignment
+    allow_assign_grafana_admin = false
     
     [log]
     mode = console
