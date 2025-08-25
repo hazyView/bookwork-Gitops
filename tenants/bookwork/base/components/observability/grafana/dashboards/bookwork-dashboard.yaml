@@ -18,8 +18,265 @@ data:
       "style": "dark",
       "timezone": "browser",
         "panels": [
-          {
-            "id": 1,
+             "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+          }
+        ],
+        "templating": {
+          "list": [
+            {
+              "name": "instance",
+              "type": "query",
+              "query": "label_values(bookwork_frontend_http_requests_total, instance)",
+              "current": {
+                "value": "All",
+                "text": "All"
+              },
+              "includeAll": true,
+              "allValue": ".*"
+            }
+          ]
+        }
+      }
+
+  bookwork-slo-dashboard.json: |
+    {
+      "id": null,
+      "title": "Bookwork SLO/SLI Dashboard",
+      "tags": ["bookwork", "slo", "sli", "sla", "reliability"],
+      "style": "dark",
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Service Level Indicators (SLI) - Current Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "(1 - (sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])))) * 100",
+              "legendFormat": "Availability %",
+              "refId": "A"
+            },
+            {
+              "expr": "(1 - (sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])))) * 100",
+              "legendFormat": "Success Rate %",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m])) * 1000",
+              "legendFormat": "P95 Latency (ms)",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 95},
+                  {"color": "green", "value": 99}
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "P95 Latency (ms)"},
+                "properties": [
+                  {"id": "unit", "value": "ms"},
+                  {"id": "thresholds", "value": {
+                    "steps": [
+                      {"color": "green", "value": null},
+                      {"color": "yellow", "value": 500},
+                      {"color": "red", "value": 1000}
+                    ]
+                  }}
+                ]
+              }
+            ]
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+        },
+        {
+          "id": 2,
+          "title": "SLO Compliance - 30 Day Trend",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "avg_over_time((1 - (increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[1h]) / increase(bookwork_frontend_http_requests_total[1h])))[30d:1h]) * 100",
+              "legendFormat": "Availability SLO (99.9%)",
+              "refId": "A"
+            },
+            {
+              "expr": "avg_over_time((1 - (increase(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[1h]) / increase(bookwork_frontend_http_requests_total[1h])))[30d:1h]) * 100",
+              "legendFormat": "Success Rate SLO (99.5%)",
+              "refId": "B"
+            },
+            {
+              "expr": "avg_over_time(histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[1h]))[30d:1h]) <= 0.5",
+              "legendFormat": "Latency SLO (<500ms P95)",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "percent",
+              "min": 95,
+              "max": 100
+            }
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+        },
+        {
+          "id": 3,
+          "title": "Error Budget Burn Rate",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[1h])) / sum(rate(bookwork_frontend_http_requests_total[1h]))) / 0.001",
+              "legendFormat": "Current Burn Rate (1h)",
+              "refId": "A"
+            },
+            {
+              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[6h])) / sum(rate(bookwork_frontend_http_requests_total[6h]))) / 0.001",
+              "legendFormat": "6h Burn Rate",
+              "refId": "B"
+            },
+            {
+              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[24h])) / sum(rate(bookwork_frontend_http_requests_total[24h]))) / 0.001",
+              "legendFormat": "24h Burn Rate",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "percentunit",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 2},
+                  {"color": "red", "value": 10}
+                ]
+              }
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+        },
+        {
+          "id": 4,
+          "title": "Error Budget Remaining",
+          "type": "piechart",
+          "targets": [
+            {
+              "expr": "100 - (sum(increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[30d])) / sum(increase(bookwork_frontend_http_requests_total[30d])) * 100 / 0.1)",
+              "legendFormat": "Budget Remaining",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[30d])) / sum(increase(bookwork_frontend_http_requests_total[30d])) * 100 / 0.1",
+              "legendFormat": "Budget Consumed",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+        },
+        {
+          "id": 5,
+          "title": "SLA Breach Alert Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "ALERTS{alertname=\"BookworkHighErrorRate\"} == 1",
+              "legendFormat": "High Error Rate",
+              "refId": "A"
+            },
+            {
+              "expr": "ALERTS{alertname=\"BookworkHighLatency\"} == 1",
+              "legendFormat": "High Latency",
+              "refId": "B"
+            },
+            {
+              "expr": "ALERTS{alertname=\"BookworkServiceDown\"} == 1",
+              "legendFormat": "Service Down",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "red", "value": 1}
+                ]
+              },
+              "unit": "short",
+              "mappings": [
+                {"options": {"0": {"text": "OK"}}, "type": "value"},
+                {"options": {"1": {"text": "FIRING"}}, "type": "value"}
+              ]
+            }
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+        },
+        {
+          "id": 6,
+          "title": "Service Dependency Health",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "up{job=\"bookwork-frontend\"}",
+              "legendFormat": "Frontend Service",
+              "refId": "A"
+            },
+            {
+              "expr": "up{job=\"bookwork-api\"}",
+              "legendFormat": "API Service",
+              "refId": "B"
+            },
+            {
+              "expr": "up{job=\"prometheus\"}",
+              "legendFormat": "Monitoring",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short",
+              "min": 0,
+              "max": 1
+            }
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+        }
+      ]
+    }    "id": 1,
             "title": "Pod Status",
             "type": "stat",
             "targets": [
@@ -262,6 +519,75 @@ data:
               }
             },
             "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+          },
+          {
+            "id": 12,
+            "title": "Event Loop Lag",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "bookwork_frontend_nodejs_eventloop_lag_mean_seconds",
+                "legendFormat": "Mean Lag",
+                "refId": "A"
+              },
+              {
+                "expr": "bookwork_frontend_nodejs_eventloop_lag_p95_seconds",
+                "legendFormat": "95th Percentile",
+                "refId": "B"
+              },
+              {
+                "expr": "bookwork_frontend_nodejs_eventloop_lag_p99_seconds",
+                "legendFormat": "99th Percentile",
+                "refId": "C"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "unit": "s",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 0.05},
+                    {"color": "red", "value": 0.1}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+          },
+          {
+            "id": 13,
+            "title": "Node.js Active Resources",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "bookwork_frontend_nodejs_active_handles_total",
+                "legendFormat": "Active Handles",
+                "refId": "A"
+              },
+              {
+                "expr": "bookwork_frontend_nodejs_active_requests_total",
+                "legendFormat": "Active Requests",
+                "refId": "B"
+              },
+              {
+                "expr": "bookwork_frontend_nodejs_active_resources_total",
+                "legendFormat": "Total Resources",
+                "refId": "C"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "unit": "short"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
           },
           {
             "id": 5,

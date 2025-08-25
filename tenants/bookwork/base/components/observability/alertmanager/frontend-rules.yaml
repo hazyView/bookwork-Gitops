@@ -16,6 +16,115 @@ data:
         interval: 30s
         rules:
           # ============================================================================
+          # SLO/SLI BASED ALERTS - Service Level Objectives
+          # ============================================================================
+          
+          - alert: BookworkSLOErrorRateCritical
+            expr: (sum(rate(bookwork_frontend_http_requests_total{status=~"5.."}[1h])) / sum(rate(bookwork_frontend_http_requests_total[1h]))) > 0.01
+            for: 2m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+              slo: availability
+              burn_rate: fast
+            annotations:
+              summary: "Bookwork SLO: Critical error rate breach"
+              description: "Error rate {{ $value | humanizePercentage }} exceeds SLO threshold of 1% over 1h window. This consumes error budget rapidly."
+              runbook_url: "https://wiki.bookwork.com/runbooks/slo-error-rate"
+
+          - alert: BookworkSLOErrorRateWarning
+            expr: (sum(rate(bookwork_frontend_http_requests_total{status=~"5.."}[6h])) / sum(rate(bookwork_frontend_http_requests_total[6h]))) > 0.005
+            for: 15m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+              slo: availability
+              burn_rate: medium
+            annotations:
+              summary: "Bookwork SLO: Elevated error rate"
+              description: "Error rate {{ $value | humanizePercentage }} exceeds SLO threshold of 0.5% over 6h window."
+
+          - alert: BookworkSLOLatencyCritical
+            expr: histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m])) > 1.0
+            for: 2m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+              slo: latency
+            annotations:
+              summary: "Bookwork SLO: Critical latency breach"
+              description: "95th percentile latency {{ $value | humanizeDuration }} exceeds SLO threshold of 500ms."
+              runbook_url: "https://wiki.bookwork.com/runbooks/slo-latency"
+
+          - alert: BookworkSLOLatencyWarning
+            expr: histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[15m])) > 0.5
+            for: 10m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+              slo: latency
+            annotations:
+              summary: "Bookwork SLO: Elevated latency"
+              description: "95th percentile latency {{ $value | humanizeDuration }} exceeds warning threshold."
+
+          - alert: BookworkSLOAvailabilityCritical
+            expr: (1 - (sum(rate(bookwork_frontend_http_requests_total{status=~"5.."}[1h])) / sum(rate(bookwork_frontend_http_requests_total[1h])))) < 0.999
+            for: 5m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+              slo: availability
+            annotations:
+              summary: "Bookwork SLO: Availability below 99.9%"
+              description: "Service availability {{ $value | humanizePercentage }} is below SLO target of 99.9%."
+
+          - alert: BookworkErrorBudgetExhaustion
+            expr: (sum(increase(bookwork_frontend_http_requests_total{status=~"5.."}[30d])) / sum(increase(bookwork_frontend_http_requests_total[30d]))) > 0.001
+            for: 0m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+              slo: error_budget
+            annotations:
+              summary: "Bookwork SLO: Error budget 90% consumed"
+              description: "Error budget consumption is at {{ $value | humanizePercentage }} for the 30-day window. Consider implementing service improvements."
+
+          # ============================================================================
+          # NODE.JS SPECIFIC ALERTS
+          # ============================================================================
+          
+          - alert: BookworkNodeJSEventLoopLag
+            expr: bookwork_frontend_nodejs_eventloop_lag_p99_seconds > 0.1
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+              component: nodejs
+            annotations:
+              summary: "Bookwork Node.js: High event loop lag"
+              description: "Node.js event loop lag P99 is {{ $value | humanizeDuration }}. This indicates blocking operations affecting performance."
+              runbook_url: "https://wiki.bookwork.com/runbooks/nodejs-eventloop"
+
+          - alert: BookworkNodeJSMemoryLeak
+            expr: increase(bookwork_frontend_nodejs_active_handles_total[1h]) > 100
+            for: 15m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+              component: nodejs
+            annotations:
+              summary: "Bookwork Node.js: Potential memory leak detected"
+              description: "Active handles increased by {{ $value }} in the last hour. This may indicate a memory leak."
+
+          # ============================================================================
           # HIGH AVAILABILITY ALERTS
           # ============================================================================
           
