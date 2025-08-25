@@ -299,4 +299,4 @@ data:
               team: frontend
             annotations:
               summary: "Memory leak detected in Bookwork Frontend"
-              description: "Memory usage has increased by {{ $value | humanizeBytes }} over the last 2 hours, indicating a potential memory leak."
+              description: "Memory usage has increased by {{ $value | humanize1024 }} over the last 2 hours, indicating a potential memory leak."
