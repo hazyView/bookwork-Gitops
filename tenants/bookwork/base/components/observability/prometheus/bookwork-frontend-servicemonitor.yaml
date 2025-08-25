@@ -1,0 +1,54 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: bookwork-frontend-metrics
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: bookwork-frontend
+    app.kubernetes.io/part-of: bookwork-observability
+    app.kubernetes.io/component: monitoring
+    prometheus: kube-prometheus
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bookwork-frontend
+      app.kubernetes.io/component: frontend
+  namespaceSelector:
+    matchNames:
+    - bookwork
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    honorLabels: false
+    scheme: http
+    tlsConfig: {}
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_service_name]
+      targetLabel: service
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_pod_container_name]
+      targetLabel: container
+    - targetLabel: job
+      replacement: bookwork-frontend
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: '^(request_count|request_latency_seconds.*|error_count|bookwork_frontend_.*)$'
+      action: keep
+    - sourceLabels: [__name__]
+      regex: '^bookwork_frontend_(.+)$'
+      targetLabel: __name__
+      replacement: '${1}'
+    - regex: '^(pod|container)$'
+      action: labeldrop
+  targetLimit: 0
+  sampleLimit: 0
+  honorTimestamps: true

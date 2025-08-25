@@ -44,6 +44,8 @@ spec:
           - '--web.enable-lifecycle'
           - '--web.enable-admin-api'
           - '--log.level=info'
+          - '--query.max-concurrency=20'
+          - '--query.timeout=2m'
         ports:
         - name: http
           containerPort: 9090
@@ -99,5 +101,9 @@ spec:
               name: prometheus-rules-frontend
           - configMap:
               name: prometheus-rules-kubernetes
+          - configMap:
+              name: prometheus-recording-rules
+          - configMap:
+              name: prometheus-meta-monitoring-rules
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

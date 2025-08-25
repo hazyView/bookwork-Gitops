@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- graf-sealed-secret.yaml
+- graf-cm.yaml
+- graf-deployment.yaml
+- graf-service.yaml
+- dashboards/bookwork-dashboard.yaml
+- dashboards/frontend-application-dashboard.yaml

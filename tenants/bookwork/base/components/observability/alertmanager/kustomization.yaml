@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- alertmanager-sealed-secret.yaml
+- alertmanager-cm.yaml
+- alertmanager-deployment.yaml
+- alertmanager-service.yaml
+- slack-bridge-cm.yaml
+- slack-bridge-deployment.yaml
+- slack-bridge-service.yaml
+- frontend-rules.yaml
+- kubernetes-rules.yaml
+- meta-monitoring-rules.yaml

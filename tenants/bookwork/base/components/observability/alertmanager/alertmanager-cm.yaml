@@ -31,32 +31,64 @@ data:
 
     # Route tree for alert notification
     route:
-      group_by: ['alertname', 'cluster', 'service']
-      group_wait: 30s
+      group_by: ['service', 'severity', 'alertname']
+      group_wait: 10s
       group_interval: 5m
       repeat_interval: 12h
       receiver: 'default-receiver'
       routes:
-        # Critical alerts - immediate notification
+        # Frontend service specific routing
+        - match:
+            service: bookwork-frontend
+          receiver: 'frontend-team'
+          group_by: ['alertname', 'severity']
+          group_wait: 10s
+          group_interval: 5m
+          repeat_interval: 15m
+          routes:
+            # Critical frontend alerts - immediate escalation
+            - match:
+                severity: critical
+              receiver: 'frontend-critical'
+              group_wait: 5s
+              repeat_interval: 5m
+              continue: true
+            
+            # Security events - immediate security team notification
+            - match_re:
+                alertname: '.*Security.*'
+              receiver: 'security-team'
+              group_wait: 0s
+              repeat_interval: 1m
+              continue: true
+            
+            # Component and performance warnings
+            - match:
+                severity: warning
+              receiver: 'frontend-warnings'
+              group_wait: 30s
+              repeat_interval: 30m
+            
+            # Info alerts for low-priority notifications
+            - match:
+                severity: info
+              receiver: 'frontend-info'
+              group_wait: 5m
+              repeat_interval: 2h
+        
+        # General critical alerts (non-frontend)
         - match:
             severity: critical
           receiver: 'critical-alerts'
           group_wait: 10s
           repeat_interval: 5m
         
-        # Warning alerts - standard notification
+        # General warning alerts
         - match:
             severity: warning
           receiver: 'warning-alerts'
           group_wait: 30s
           repeat_interval: 30m
-        
-        # Frontend specific alerts
-        - match:
-            service: bookwork-frontend
-          receiver: 'frontend-alerts'
-          group_wait: 30s
-          repeat_interval: 15m
 
         # Infrastructure alerts
         - match:
@@ -71,8 +103,44 @@ data:
           - url: 'http://alertmanager-slack-bridge:5001/default'
             send_resolved: true
 
+      # Frontend team receivers
+      - name: 'frontend-team'
+        webhook_configs:
+          - url: 'http://alertmanager-slack-bridge:5001/frontend'
+            send_resolved: true
+            title: 'Bookwork Frontend Alert'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+      - name: 'frontend-critical'
+        webhook_configs:
+          - url: 'http://alertmanager-slack-bridge:5001/frontend-critical'
+            send_resolved: true
+            title: '🚨 CRITICAL: Bookwork Frontend Alert'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+
+      - name: 'frontend-warnings'
+        webhook_configs:
+          - url: 'http://alertmanager-slack-bridge:5001/frontend-warnings'
+            send_resolved: true
+            title: '⚠️ WARNING: Bookwork Frontend Alert'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+      - name: 'frontend-info'
+        webhook_configs:
+          - url: 'http://alertmanager-slack-bridge:5001/frontend-info'
+            send_resolved: true
+            title: 'ℹ️ INFO: Bookwork Frontend Alert'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+      - name: 'security-team'
+        webhook_configs:
+          - url: 'http://alertmanager-slack-bridge:5001/security'
+            send_resolved: true
+            title: '🔒 SECURITY ALERT: Bookwork Frontend'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+
+      # General receivers
       - name: 'critical-alerts'
-        # All critical alerts go through Slack bridge
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/critical'
             send_resolved: true
@@ -80,11 +148,6 @@ data:
       - name: 'warning-alerts'
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/warning'
-            send_resolved: true
-
-      - name: 'frontend-alerts'
-        webhook_configs:
-          - url: 'http://alertmanager-slack-bridge:5001/frontend'
             send_resolved: true
 
       - name: 'infrastructure-alerts'

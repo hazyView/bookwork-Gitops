@@ -1,0 +1,242 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-recording-rules
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: bookwork-observability
+data:
+  recording-rules.yml: |
+    groups:
+      - name: bookwork-frontend.recording-rules
+        interval: 30s
+        rules:
+          # ============================================================================
+          # HTTP REQUEST METRICS RECORDING RULES
+          # ============================================================================
+          
+          # Request rate by service
+          - record: bookwork:frontend_request_rate
+            expr: sum(rate(request_count{job="bookwork-frontend"}[5m]))
+            labels:
+              service: bookwork-frontend
+              
+          # Request rate by method
+          - record: bookwork:frontend_request_rate_by_method
+            expr: sum(rate(request_count{job="bookwork-frontend"}[5m])) by (method)
+            labels:
+              service: bookwork-frontend
+              
+          # Request rate by route
+          - record: bookwork:frontend_request_rate_by_route
+            expr: sum(rate(request_count{job="bookwork-frontend"}[5m])) by (route)
+            labels:
+              service: bookwork-frontend
+              
+          # Error rate percentage
+          - record: bookwork:frontend_error_rate_percent
+            expr: sum(rate(error_count{job="bookwork-frontend"}[5m])) / sum(rate(request_count{job="bookwork-frontend"}[5m])) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Error rate by method
+          - record: bookwork:frontend_error_rate_by_method
+            expr: sum(rate(error_count{job="bookwork-frontend"}[5m])) by (method) / sum(rate(request_count{job="bookwork-frontend"}[5m])) by (method) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # ============================================================================
+          # LATENCY PERCENTILES RECORDING RULES
+          # ============================================================================
+          
+          # P50 latency
+          - record: bookwork:frontend_latency_p50
+            expr: histogram_quantile(0.50, sum(rate(request_latency_seconds_bucket{job="bookwork-frontend"}[5m])) by (le))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.50"
+              
+          # P95 latency
+          - record: bookwork:frontend_latency_p95
+            expr: histogram_quantile(0.95, sum(rate(request_latency_seconds_bucket{job="bookwork-frontend"}[5m])) by (le))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.95"
+              
+          # P99 latency
+          - record: bookwork:frontend_latency_p99
+            expr: histogram_quantile(0.99, sum(rate(request_latency_seconds_bucket{job="bookwork-frontend"}[5m])) by (le))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.99"
+              
+          # P95 latency by route
+          - record: bookwork:frontend_latency_p95_by_route
+            expr: histogram_quantile(0.95, sum(rate(request_latency_seconds_bucket{job="bookwork-frontend"}[5m])) by (le, route))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.95"
+              
+          # ============================================================================
+          # CACHE PERFORMANCE RECORDING RULES
+          # ============================================================================
+          
+          # Cache hit rate percentage
+          - record: bookwork:frontend_cache_hit_rate
+            expr: sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) / (sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) + sum(rate(bookwork_frontend_cache_misses_total{job="bookwork-frontend"}[5m]))) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Cache hit rate by type
+          - record: bookwork:frontend_cache_hit_rate_by_type
+            expr: sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) by (cache_type) / (sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) by (cache_type) + sum(rate(bookwork_frontend_cache_misses_total{job="bookwork-frontend"}[5m])) by (cache_type)) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Total cache operations rate
+          - record: bookwork:frontend_cache_operations_rate
+            expr: sum(rate(bookwork_frontend_cache_hits_total{job="bookwork-frontend"}[5m])) + sum(rate(bookwork_frontend_cache_misses_total{job="bookwork-frontend"}[5m]))
+            labels:
+              service: bookwork-frontend
+              
+          # ============================================================================
+          # COMPONENT PERFORMANCE RECORDING RULES
+          # ============================================================================
+          
+          # Component error rate
+          - record: bookwork:frontend_component_error_rate
+            expr: sum(rate(bookwork_frontend_component_errors_total{job="bookwork-frontend"}[5m])) by (component)
+            labels:
+              service: bookwork-frontend
+              
+          # Component load time P95
+          - record: bookwork:frontend_component_load_time_p95
+            expr: histogram_quantile(0.95, sum(rate(bookwork_frontend_component_load_duration_seconds_bucket{job="bookwork-frontend"}[5m])) by (le, component))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.95"
+              
+          # Component load time P99
+          - record: bookwork:frontend_component_load_time_p99
+            expr: histogram_quantile(0.99, sum(rate(bookwork_frontend_component_load_duration_seconds_bucket{job="bookwork-frontend"}[5m])) by (le, component))
+            labels:
+              service: bookwork-frontend
+              quantile: "0.99"
+              
+          # ============================================================================
+          # SECURITY AND BUSINESS METRICS RECORDING RULES
+          # ============================================================================
+          
+          # Security events rate
+          - record: bookwork:frontend_security_events_rate
+            expr: sum(rate(bookwork_frontend_security_events_total{job="bookwork-frontend"}[5m]))
+            labels:
+              service: bookwork-frontend
+              
+          # Security events rate by type
+          - record: bookwork:frontend_security_events_rate_by_type
+            expr: sum(rate(bookwork_frontend_security_events_total{job="bookwork-frontend"}[5m])) by (event_type)
+            labels:
+              service: bookwork-frontend
+              
+          # Rate limiting hit rate
+          - record: bookwork:frontend_rate_limit_hit_rate
+            expr: sum(rate(bookwork_frontend_rate_limit_hits_total{job="bookwork-frontend"}[5m]))
+            labels:
+              service: bookwork-frontend
+              
+          # Page load rate
+          - record: bookwork:frontend_page_load_rate
+            expr: sum(rate(bookwork_frontend_page_loads_total{job="bookwork-frontend"}[5m]))
+            labels:
+              service: bookwork-frontend
+              
+          # Page load rate by page
+          - record: bookwork:frontend_page_load_rate_by_page
+            expr: sum(rate(bookwork_frontend_page_loads_total{job="bookwork-frontend"}[5m])) by (page)
+            labels:
+              service: bookwork-frontend
+              
+          # ============================================================================
+          # RESOURCE UTILIZATION RECORDING RULES
+          # ============================================================================
+          
+          # CPU utilization percentage
+          - record: bookwork:frontend_cpu_usage_percent
+            expr: rate(bookwork_frontend_process_cpu_seconds_total{job="bookwork-frontend"}[5m]) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Memory usage in MB
+          - record: bookwork:frontend_memory_usage_mb
+            expr: bookwork_frontend_process_resident_memory_bytes{job="bookwork-frontend"} / 1024 / 1024
+            labels:
+              service: bookwork-frontend
+              
+          # Memory usage percentage (if limits are available)
+          - record: bookwork:frontend_memory_usage_percent
+            expr: (container_memory_working_set_bytes{container="frontend",namespace="bookwork"} / container_spec_memory_limit_bytes{container="frontend",namespace="bookwork"}) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Container CPU usage percentage
+          - record: bookwork:frontend_container_cpu_usage_percent
+            expr: (rate(container_cpu_usage_seconds_total{container="frontend",namespace="bookwork"}[5m]) * 100)
+            labels:
+              service: bookwork-frontend
+              
+          # ============================================================================
+          # AGGREGATED HEALTH METRICS
+          # ============================================================================
+          
+          # Service availability (percentage of time service is up)
+          - record: bookwork:frontend_availability_percent
+            expr: avg_over_time(up{job="bookwork-frontend"}[5m]) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # Overall service health score (composite metric)
+          - record: bookwork:frontend_health_score
+            expr: |
+              (
+                (bookwork:frontend_availability_percent / 100) * 0.4 +
+                (1 - min(bookwork:frontend_error_rate_percent / 100, 1)) * 0.3 +
+                (1 - min(bookwork:frontend_latency_p95, 5) / 5) * 0.2 +
+                (min(bookwork:frontend_cache_hit_rate, 100) / 100) * 0.1
+              ) * 100
+            labels:
+              service: bookwork-frontend
+              
+          # ============================================================================
+          # TIME WINDOW AGGREGATIONS (for dashboards and alerting)
+          # ============================================================================
+          
+          # 15-minute aggregations for longer-term trends
+          - record: bookwork:frontend_request_rate_15m
+            expr: sum(rate(request_count{job="bookwork-frontend"}[15m]))
+            labels:
+              service: bookwork-frontend
+              window: "15m"
+              
+          - record: bookwork:frontend_error_rate_percent_15m
+            expr: sum(rate(error_count{job="bookwork-frontend"}[15m])) / sum(rate(request_count{job="bookwork-frontend"}[15m])) * 100
+            labels:
+              service: bookwork-frontend
+              window: "15m"
+              
+          # 1-hour aggregations for capacity planning
+          - record: bookwork:frontend_request_rate_1h
+            expr: sum(rate(request_count{job="bookwork-frontend"}[1h]))
+            labels:
+              service: bookwork-frontend
+              window: "1h"
+              
+          - record: bookwork:frontend_error_rate_percent_1h
+            expr: sum(rate(error_count{job="bookwork-frontend"}[1h])) / sum(rate(request_count{job="bookwork-frontend"}[1h])) * 100
+            labels:
+              service: bookwork-frontend
+              window: "1h"

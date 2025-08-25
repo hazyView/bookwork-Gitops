@@ -1,0 +1,319 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-meta-monitoring-rules
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: bookwork-observability
+data:
+  meta-monitoring-rules.yml: |
+    groups:
+      - name: meta-monitoring.rules
+        interval: 30s
+        rules:
+          # ============================================================================
+          # PROMETHEUS META-MONITORING ALERTS
+          # ============================================================================
+          
+          - alert: PrometheusDown
+            expr: up{job="prometheus"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus server is down"
+              description: "Prometheus server has been down for more than 1 minute."
+              runbook_url: "https://wiki.bookwork.com/runbooks/prometheus-down"
+
+          - alert: PrometheusConfigReloadFailed
+            expr: prometheus_config_last_reload_successful != 1
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus configuration reload failed"
+              description: "Prometheus configuration reload failed. Check the configuration for errors."
+
+          - alert: PrometheusTargetDown
+            expr: up{job="bookwork-frontend"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Prometheus target is down"
+              description: "Prometheus cannot scrape {{ $labels.instance }} for more than 2 minutes."
+
+          - alert: PrometheusTargetScrapeTooSlow
+            expr: prometheus_target_interval_length_seconds{quantile="0.9"} > 60
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus target scraping is slow"
+              description: "Prometheus is taking more than 60s to scrape {{ $labels.instance }}."
+
+          - alert: PrometheusLargeScrape
+            expr: increase(prometheus_target_scrapes_exceeded_sample_limit_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus large scrape"
+              description: "Prometheus has exceeded the sample limit while scraping {{ $labels.instance }}."
+
+          - alert: PrometheusTargetScrapesDuplicate
+            expr: increase(prometheus_target_scrapes_sample_duplicate_timestamp_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus duplicate scrapes"
+              description: "Prometheus has received duplicate timestamps while scraping {{ $labels.instance }}."
+
+          - alert: PrometheusStorageFull
+            expr: (prometheus_tsdb_size_bytes / prometheus_tsdb_size_bytes) > 0.85
+            for: 10m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus storage is almost full"
+              description: "Prometheus storage usage is {{ $value }}%."
+
+          - alert: PrometheusRuleEvaluationSlow
+            expr: prometheus_rule_group_last_duration_seconds > 60
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus rule evaluation is slow"
+              description: "Rule group {{ $labels.rule_group }} is taking {{ $value }}s to evaluate."
+
+          # ============================================================================
+          # ALERTMANAGER META-MONITORING ALERTS
+          # ============================================================================
+
+          - alert: AlertmanagerDown
+            expr: up{job="alertmanager"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: alertmanager
+              team: platform
+            annotations:
+              summary: "Alertmanager is down"
+              description: "Alertmanager has been down for more than 1 minute."
+
+          - alert: AlertmanagerConfigReloadFailed
+            expr: alertmanager_config_last_reload_successful != 1
+            for: 5m
+            labels:
+              severity: warning
+              service: alertmanager
+              team: platform
+            annotations:
+              summary: "Alertmanager configuration reload failed"
+              description: "Alertmanager configuration reload failed."
+
+          - alert: AlertmanagerNotificationsFailing
+            expr: rate(alertmanager_notifications_failed_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: alertmanager
+              team: platform
+            annotations:
+              summary: "Alertmanager notifications are failing"
+              description: "Alertmanager notifications are failing for {{ $labels.integration }}."
+
+          - alert: AlertmanagerClusterDown
+            expr: alertmanager_cluster_members != alertmanager_cluster_members_joined
+            for: 5m
+            labels:
+              severity: warning
+              service: alertmanager
+              team: platform
+            annotations:
+              summary: "Alertmanager cluster is degraded"
+              description: "Alertmanager cluster has {{ $value }} members but only {{ $labels.joined }} are joined."
+
+          # ============================================================================
+          # GRAFANA META-MONITORING ALERTS
+          # ============================================================================
+
+          - alert: GrafanaDown
+            expr: up{job=~"grafana.*"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: grafana
+              team: platform
+            annotations:
+              summary: "Grafana is down"
+              description: "Grafana has been down for more than 1 minute."
+
+          - alert: GrafanaDashboardLoadFailed
+            expr: increase(grafana_alerting_rule_evaluation_failures_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: grafana
+              team: platform
+            annotations:
+              summary: "Grafana dashboard evaluation failed"
+              description: "Grafana dashboard evaluation failed {{ $value }} times in the last 5 minutes."
+
+          # ============================================================================
+          # FRONTEND METRICS AVAILABILITY ALERTS
+          # ============================================================================
+
+          - alert: FrontendMetricsUnavailable
+            expr: up{job="bookwork-frontend"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Frontend metrics endpoint is unavailable"
+              description: "The frontend metrics endpoint has been unavailable for more than 2 minutes."
+
+          - alert: FrontendMetricsStale
+            expr: time() - prometheus_last_evaluation_timestamp_seconds{job="bookwork-frontend"} > 300
+            for: 5m
+            labels:
+              severity: warning
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Frontend metrics are stale"
+              description: "Frontend metrics haven't been updated for more than 5 minutes."
+
+          - alert: FrontendServiceMonitorFailed
+            expr: up{job="bookwork-frontend"} == 0
+            for: 3m
+            labels:
+              severity: critical
+              service: bookwork-frontend
+              team: frontend
+            annotations:
+              summary: "Frontend ServiceMonitor is failing"
+              description: "ServiceMonitor for bookwork-frontend is failing to scrape metrics."
+
+          # ============================================================================
+          # RECORDING RULES HEALTH ALERTS
+          # ============================================================================
+
+          - alert: RecordingRulesFailed
+            expr: increase(prometheus_rule_evaluation_failures_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Recording rules evaluation failed"
+              description: "Recording rules evaluation failed {{ $value }} times for rule group {{ $labels.rule_group }}."
+
+          - alert: RecordingRulesSlow
+            expr: prometheus_rule_group_last_duration_seconds{rule_group=~".*recording.*"} > 30
+            for: 5m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Recording rules evaluation is slow"
+              description: "Recording rules in group {{ $labels.rule_group }} are taking {{ $value }}s to evaluate."
+
+          # ============================================================================
+          # MONITORING SYSTEM HEALTH SCORE
+          # ============================================================================
+
+          - alert: MonitoringSystemDegraded
+            expr: |
+              (
+                avg(up{job="prometheus"}) * 0.4 +
+                avg(up{job="alertmanager"}) * 0.3 +
+                avg(up{job=~"grafana.*"}) * 0.2 +
+                avg(up{job="bookwork-frontend"}) * 0.1
+              ) < 0.9
+            for: 5m
+            labels:
+              severity: warning
+              service: monitoring
+              team: platform
+            annotations:
+              summary: "Monitoring system is degraded"
+              description: "Overall monitoring system health is {{ $value | humanizePercentage }}."
+
+          # ============================================================================
+          # SLACK BRIDGE MONITORING
+          # ============================================================================
+
+          - alert: SlackBridgeDown
+            expr: up{job=~".*slack.*"} == 0
+            for: 2m
+            labels:
+              severity: warning
+              service: slack-bridge
+              team: platform
+            annotations:
+              summary: "Slack bridge is down"
+              description: "Slack notification bridge has been down for more than 2 minutes."
+
+          # ============================================================================
+          # STORAGE AND RESOURCE MONITORING
+          # ============================================================================
+
+          - alert: PrometheusHighMemoryUsage
+            expr: (process_resident_memory_bytes{job="prometheus"} / 1024 / 1024) > 1500
+            for: 10m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus high memory usage"
+              description: "Prometheus is using {{ $value }}MB of memory."
+
+          - alert: PrometheusDiskSpaceLow
+            expr: (prometheus_tsdb_size_bytes / (25 * 1024 * 1024 * 1024)) > 0.8
+            for: 10m
+            labels:
+              severity: warning
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus disk space is low"
+              description: "Prometheus storage usage is {{ $value | humanizePercentage }} of allocated space."
+
+          - alert: PrometheusWALCorrupted
+            expr: prometheus_tsdb_wal_corruptions_total > 0
+            for: 0m
+            labels:
+              severity: critical
+              service: prometheus
+              team: platform
+            annotations:
+              summary: "Prometheus WAL corruption detected"
+              description: "Prometheus has detected {{ $value }} WAL corruptions."
