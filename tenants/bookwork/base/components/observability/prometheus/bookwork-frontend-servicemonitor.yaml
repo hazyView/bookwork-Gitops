@@ -47,6 +47,7 @@ spec:
       regex: '^bookwork_frontend_(.+)$'
       targetLabel: __name__
       replacement: '${1}'
+      action: replace
     - regex: '^(pod|container)$'
       action: labeldrop
   targetLimit: 0
