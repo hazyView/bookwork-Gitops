@@ -24,11 +24,11 @@ data:
             "type": "stat",
             "targets": [
               {
-                "expr": "count(kube_pod_info{namespace=\"bookwork\"})",
+                "expr": "count(up{job=\"bookwork-frontend\"})",
                 "legendFormat": "Total Pods"
               },
               {
-                "expr": "count(kube_pod_status_phase{namespace=\"bookwork\", phase=\"Running\"})",
+                "expr": "count(up{job=\"bookwork-frontend\"} == 1)",
                 "legendFormat": "Running Pods"
               }
             ],
@@ -40,12 +40,16 @@ data:
             "type": "graph",
             "targets": [
               {
-                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"bookwork\"}[5m])) by (pod)",
+                "expr": "bookwork:frontend_container_cpu_usage_percent",
+                "legendFormat": "Frontend CPU %"
+              },
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*bookwork.*\"}[5m]) * 100",
                 "legendFormat": "{{pod}}"
               }
             ],
             "yAxes": [
-              {"unit": "short", "label": "CPU Usage"}
+              {"unit": "percent", "label": "CPU Usage"}
             ],
             "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
           },
@@ -55,7 +59,11 @@ data:
             "type": "graph",
             "targets": [
               {
-                "expr": "sum(container_memory_usage_bytes{namespace=\"bookwork\"}) by (pod) / 1024 / 1024",
+                "expr": "bookwork:frontend_memory_usage_percent",
+                "legendFormat": "Frontend Memory %"
+              },
+              {
+                "expr": "container_memory_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024",
                 "legendFormat": "{{pod}}"
               }
             ],
@@ -70,11 +78,11 @@ data:
             "type": "graph",
             "targets": [
               {
-                "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"bookwork\"}[5m])) by (pod)",
+                "expr": "rate(container_network_receive_bytes_total{pod=~\".*bookwork.*\"}[5m])",
                 "legendFormat": "{{pod}} RX"
               },
               {
-                "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"bookwork\"}[5m])) by (pod)",
+                "expr": "rate(container_network_transmit_bytes_total{pod=~\".*bookwork.*\"}[5m])",
                 "legendFormat": "{{pod}} TX"
               }
             ],
@@ -85,12 +93,12 @@ data:
           },
           {
             "id": 5,
-            "title": "Ingress Request Rate",
+            "title": "HTTP Request Rate",
             "type": "graph",
             "targets": [
               {
-                "expr": "sum(rate(nginx_ingress_controller_requests{namespace=\"bookwork\"}[5m])) by (ingress)",
-                "legendFormat": "{{ingress}}"
+                "expr": "rate(bookwork_frontend_http_requests_total[5m])",
+                "legendFormat": "Frontend Requests/sec"
               }
             ],
             "yAxes": [
@@ -100,11 +108,11 @@ data:
           },
           {
             "id": 6,
-            "title": "Disk Usage",
+            "title": "Filesystem Usage",
             "type": "graph",
             "targets": [
               {
-                "expr": "sum(container_fs_usage_bytes{namespace=\"bookwork\"}) by (pod) / 1024 / 1024 / 1024",
+                "expr": "container_fs_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024 / 1024",
                 "legendFormat": "{{pod}}"
               }
             ],
@@ -115,12 +123,16 @@ data:
           },
           {
             "id": 7,
-            "title": "Service Response Time",
+            "title": "Application Response Time",
             "type": "graph",
             "targets": [
               {
-                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"bookwork\"}[5m])) by (service, le))",
-                "legendFormat": "{{service}} P95"
+                "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "Frontend P95"
+              },
+              {
+                "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
+                "legendFormat": "Frontend Avg"
               }
             ],
             "yAxes": [
@@ -152,7 +164,7 @@ data:
             "type": "stat",
             "targets": [
               {
-                "expr": "sum(rate(request_count[5m]))",
+                "expr": "sum(rate(bookwork_frontend_http_requests_total[5m]))",
                 "legendFormat": "Requests/sec",
                 "refId": "A"
               }
@@ -180,7 +192,7 @@ data:
             "type": "stat",
             "targets": [
               {
-                "expr": "sum(rate(error_count[5m])) / sum(rate(request_count[5m])) * 100",
+                "expr": "sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])) * 100",
                 "legendFormat": "Error Rate %",
                 "refId": "A"
               }
@@ -208,7 +220,7 @@ data:
             "type": "stat",
             "targets": [
               {
-                "expr": "rate(request_latency_seconds_sum[5m]) / rate(request_latency_seconds_count[5m])",
+                "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
                 "legendFormat": "Avg Latency",
                 "refId": "A"
               }
@@ -257,7 +269,7 @@ data:
             "type": "timeseries",
             "targets": [
               {
-                "expr": "sum(rate(request_count[5m])) by (status)",
+                "expr": "sum(rate(bookwork_frontend_http_requests_total[5m])) by (status)",
                 "legendFormat": "{{status}}",
                 "refId": "A"
               }
@@ -278,17 +290,17 @@ data:
             "type": "timeseries",
             "targets": [
               {
-                "expr": "histogram_quantile(0.50, rate(request_latency_seconds_bucket[5m]))",
+                "expr": "histogram_quantile(0.50, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
                 "legendFormat": "50th percentile",
                 "refId": "A"
               },
               {
-                "expr": "histogram_quantile(0.95, rate(request_latency_seconds_bucket[5m]))",
+                "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
                 "legendFormat": "95th percentile",
                 "refId": "B"
               },
               {
-                "expr": "histogram_quantile(0.99, rate(request_latency_seconds_bucket[5m]))",
+                "expr": "histogram_quantile(0.99, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
                 "legendFormat": "99th percentile",
                 "refId": "C"
               }
