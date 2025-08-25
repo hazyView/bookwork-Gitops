@@ -51,4 +51,3 @@ spec:
       action: labeldrop
   targetLimit: 0
   sampleLimit: 0
-  honorTimestamps: true
