@@ -41,11 +41,14 @@ data:
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
-    # Completely disable org/team restrictions 
+    # Completely disable org/team restrictions for personal accounts
     allowed_organizations = 
     team_ids = 
     role_attribute_path = 
-    auto_assign_org_role = Admin
+    # Grant read-only access to GitHub users
+    auto_assign_org_role = Viewer
+    # Skip organization role synchronization to prevent team API calls
+    skip_org_role_sync = true
     
     [log]
     mode = console
