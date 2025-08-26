@@ -22,21 +22,6 @@ data:
         "from": "now-1h",
         "to": "now"
       },
-      "access": "Public",
-      "permissions": [
-        {
-          "role": "Viewer",
-          "permission": 1
-        },
-        {
-          "role": "Editor",
-          "permission": 2
-        },
-        {
-          "role": "Admin",
-          "permission": 2
-        }
-      ],
       "panels": [
         {
           "id": 1,
@@ -161,21 +146,6 @@ data:
         "from": "now-24h",
         "to": "now"
       },
-      "access": "Public",
-      "permissions": [
-        {
-          "role": "Viewer",
-          "permission": 1
-        },
-        {
-          "role": "Editor",
-          "permission": 2
-        },
-        {
-          "role": "Admin",
-          "permission": 2
-        }
-      ],
       "panels": [
         {
           "id": 1,
@@ -415,21 +385,6 @@ data:
         "from": "now-1h",
         "to": "now"
       },
-      "access": "Public",
-      "permissions": [
-        {
-          "role": "Viewer",
-          "permission": 1
-        },
-        {
-          "role": "Editor",
-          "permission": 2
-        },
-        {
-          "role": "Admin",
-          "permission": 2
-        }
-      ],
       "panels": [
         {
           "id": 1,

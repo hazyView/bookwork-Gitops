@@ -30,7 +30,10 @@ data:
     disable_login_form = false
     
     [auth.anonymous]
-    enabled = false
+    enabled = true
+    org_name = Main Org.
+    org_role = Viewer
+    hide_version = true
     
     [auth.github]
     enabled = true
@@ -105,9 +108,9 @@ data:
   dashboard-providers.yaml: |
     apiVersion: 1
     providers:
-    - name: 'default'
+    - name: 'bookwork-observability'
       orgId: 1
-      folder: ''
+      folder: 'Bookwork Observability'
       type: file
       disableDeletion: false
       editable: true
@@ -115,3 +118,8 @@ data:
       allowUiUpdates: true
       options:
         path: /var/lib/grafana/dashboards
+      folderPermissions:
+        - role: "Viewer"
+          permission: 1
+        - role: "Editor" 
+          permission: 2
