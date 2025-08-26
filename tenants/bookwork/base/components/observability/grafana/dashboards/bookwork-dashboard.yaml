@@ -372,6 +372,7 @@ data:
           "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
         }
       ]
+    }
   bookwork-frontend-comprehensive.json: |
     {
       "id": null,
