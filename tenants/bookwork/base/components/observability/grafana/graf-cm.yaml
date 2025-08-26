@@ -24,16 +24,13 @@ data:
     [users]
     allow_sign_up = true
     auto_assign_org = true
-    auto_assign_org_role = Viewer
+    auto_assign_org_role = Editor
     
     [auth]
     disable_login_form = false
     
     [auth.anonymous]
-    enabled = true
-    org_name = Main Org.
-    org_role = Viewer
-    hide_version = true
+    enabled = false
     
     [auth.github]
     enabled = true
@@ -48,8 +45,8 @@ data:
     allowed_organizations = 
     team_ids = 
     role_attribute_path = 
-    # Grant viewer access to GitHub users with explicit dashboard permissions
-    auto_assign_org_role = Viewer
+    # Grant editor access to GitHub users for full dashboard access
+    auto_assign_org_role = Editor
     # Disable admin assignment
     allow_assign_grafana_admin = false
     
@@ -108,13 +105,13 @@ data:
   dashboard-providers.yaml: |
     apiVersion: 1
     providers:
-    - name: 'bookwork-observability'
+    - name: 'default'
       orgId: 1
       folder: ''
       type: file
       disableDeletion: false
-      editable: false
+      editable: true
       updateIntervalSeconds: 10
-      allowUiUpdates: false
+      allowUiUpdates: true
       options:
         path: /var/lib/grafana/dashboards
