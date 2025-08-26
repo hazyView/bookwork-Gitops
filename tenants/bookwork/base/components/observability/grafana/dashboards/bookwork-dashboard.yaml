@@ -17,26 +17,122 @@ data:
       "tags": ["bookwork", "infrastructure", "kubernetes"],
       "style": "dark",
       "timezone": "browser",
-        "panels": [
-             "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
-          }
-        ],
-        "templating": {
-          "list": [
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Pod Status",
+          "type": "stat",
+          "targets": [
             {
-              "name": "instance",
-              "type": "query",
-              "query": "label_values(bookwork_frontend_http_requests_total, instance)",
-              "current": {
-                "value": "All",
-                "text": "All"
-              },
-              "includeAll": true,
-              "allValue": ".*"
+              "expr": "count(up{job=\"bookwork-frontend\"})",
+              "legendFormat": "Total Pods"
+            },
+            {
+              "expr": "count(up{job=\"bookwork-frontend\"} == 1)",
+              "legendFormat": "Running Pods"
             }
-          ]
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": {"h": 4, "w": 12, "x": 0, "y": 0}
+        },
+        {
+          "id": 2,
+          "title": "CPU Usage by Pod",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*bookwork.*\"}[5m]) * 100",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+        },
+        {
+          "id": 3,
+          "title": "Memory Usage by Pod",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "container_memory_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "MB"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+        },
+        {
+          "id": 4,
+          "title": "Network I/O",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "rate(container_network_receive_bytes_total{pod=~\".*bookwork.*\"}[5m])",
+              "legendFormat": "{{pod}} RX"
+            },
+            {
+              "expr": "rate(container_network_transmit_bytes_total{pod=~\".*bookwork.*\"}[5m])",
+              "legendFormat": "{{pod}} TX"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "Bps"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+        },
+        {
+          "id": 5,
+          "title": "HTTP Request Rate",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "rate(bookwork_frontend_http_requests_total[5m])",
+              "legendFormat": "Frontend Requests/sec"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "reqps"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
         }
-      }
+      ]
+    }
 
   bookwork-slo-dashboard.json: |
     {
@@ -276,497 +372,244 @@ data:
           "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
         }
       ]
-    }    "id": 1,
-            "title": "Pod Status",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "count(up{job=\"bookwork-frontend\"})",
-                "legendFormat": "Total Pods"
-              },
-              {
-                "expr": "count(up{job=\"bookwork-frontend\"} == 1)",
-                "legendFormat": "Running Pods"
-              }
-            ],
-            "gridPos": {"h": 4, "w": 12, "x": 0, "y": 0}
-          },
-          {
-            "id": 2,
-            "title": "CPU Usage by Pod",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "bookwork:frontend_container_cpu_usage_percent",
-                "legendFormat": "Frontend CPU %"
-              },
-              {
-                "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*bookwork.*\"}[5m]) * 100",
-                "legendFormat": "{{pod}}"
-              }
-            ],
-            "yAxes": [
-              {"unit": "percent", "label": "CPU Usage"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
-          },
-          {
-            "id": 3,
-            "title": "Memory Usage by Pod",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "bookwork:frontend_memory_usage_percent",
-                "legendFormat": "Frontend Memory %"
-              },
-              {
-                "expr": "container_memory_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024",
-                "legendFormat": "{{pod}}"
-              }
-            ],
-            "yAxes": [
-              {"unit": "MB", "label": "Memory Usage"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
-          },
-          {
-            "id": 4,
-            "title": "Network I/O",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "rate(container_network_receive_bytes_total{pod=~\".*bookwork.*\"}[5m])",
-                "legendFormat": "{{pod}} RX"
-              },
-              {
-                "expr": "rate(container_network_transmit_bytes_total{pod=~\".*bookwork.*\"}[5m])",
-                "legendFormat": "{{pod}} TX"
-              }
-            ],
-            "yAxes": [
-              {"unit": "Bps", "label": "Network I/O"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
-          },
-          {
-            "id": 5,
-            "title": "HTTP Request Rate",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "rate(bookwork_frontend_http_requests_total[5m])",
-                "legendFormat": "Frontend Requests/sec"
-              }
-            ],
-            "yAxes": [
-              {"unit": "reqps", "label": "Requests/sec"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
-          },
-          {
-            "id": 6,
-            "title": "Filesystem Usage",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "container_fs_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024 / 1024",
-                "legendFormat": "{{pod}}"
-              }
-            ],
-            "yAxes": [
-              {"unit": "GB", "label": "Disk Usage"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
-          },
-          {
-            "id": 7,
-            "title": "Application Response Time",
-            "type": "graph",
-            "targets": [
-              {
-                "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
-                "legendFormat": "Frontend P95"
-              },
-              {
-                "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
-                "legendFormat": "Frontend Avg"
-              }
-            ],
-            "yAxes": [
-              {"unit": "s", "label": "Response Time"}
-            ],
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
-          }
-        ],
-        "time": {"from": "now-1h", "to": "now"},
-        "refresh": "30s"
-      }
-
   bookwork-frontend-comprehensive.json: |
     {
       "id": null,
       "title": "Bookwork Frontend Metrics - Comprehensive",
-      "tags": ["bookwork", "frontend", "sveltekit", "comprehensive"],
+      "tags": ["bookwork", "frontend", "nodejs"],
       "style": "dark",
       "timezone": "browser",
-        "refresh": "30s",
-        "time": {
-          "from": "now-1h",
-          "to": "now"
-        },
-        "panels": [
-          {
-            "id": 1,
-            "title": "Request Rate",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_http_requests_total[5m]))",
-                "legendFormat": "Requests/sec",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "thresholds": {
-                  "steps": [
-                    {"color": "green", "value": null},
-                    {"color": "yellow", "value": 50},
-                    {"color": "red", "value": 100}
-                  ]
-                },
-                "unit": "reqps"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
-          },
-          {
-            "id": 2,
-            "title": "Error Rate",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])) * 100",
-                "legendFormat": "Error Rate %",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "thresholds": {
-                  "steps": [
-                    {"color": "green", "value": null},
-                    {"color": "yellow", "value": 1},
-                    {"color": "red", "value": 5}
-                  ]
-                },
-                "unit": "percent"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
-          },
-          {
-            "id": 3,
-            "title": "Average Latency",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
-                "legendFormat": "Avg Latency",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "thresholds": {
-                  "steps": [
-                    {"color": "green", "value": null},
-                    {"color": "yellow", "value": 0.5},
-                    {"color": "red", "value": 1.0}
-                  ]
-                },
-                "unit": "s"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
-          },
-          {
-            "id": 4,
-            "title": "Active Sessions",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "bookwork_frontend_active_sessions",
-                "legendFormat": "Active Sessions",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "short"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
-          },
-          {
-            "id": 12,
-            "title": "Event Loop Lag",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "bookwork_frontend_nodejs_eventloop_lag_mean_seconds",
-                "legendFormat": "Mean Lag",
-                "refId": "A"
-              },
-              {
-                "expr": "bookwork_frontend_nodejs_eventloop_lag_p95_seconds",
-                "legendFormat": "95th Percentile",
-                "refId": "B"
-              },
-              {
-                "expr": "bookwork_frontend_nodejs_eventloop_lag_p99_seconds",
-                "legendFormat": "99th Percentile",
-                "refId": "C"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "s",
-                "thresholds": {
-                  "steps": [
-                    {"color": "green", "value": null},
-                    {"color": "yellow", "value": 0.05},
-                    {"color": "red", "value": 0.1}
-                  ]
-                }
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
-          },
-          {
-            "id": 13,
-            "title": "Node.js Active Resources",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "bookwork_frontend_nodejs_active_handles_total",
-                "legendFormat": "Active Handles",
-                "refId": "A"
-              },
-              {
-                "expr": "bookwork_frontend_nodejs_active_requests_total",
-                "legendFormat": "Active Requests",
-                "refId": "B"
-              },
-              {
-                "expr": "bookwork_frontend_nodejs_active_resources_total",
-                "legendFormat": "Total Resources",
-                "refId": "C"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "short"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
-          },
-          {
-            "id": 5,
-            "title": "Request Volume by Status Code",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_http_requests_total[5m])) by (status)",
-                "legendFormat": "{{status}}",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "reqps"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
-          },
-          {
-            "id": 6,
-            "title": "Latency Percentiles",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "histogram_quantile(0.50, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
-                "legendFormat": "50th percentile",
-                "refId": "A"
-              },
-              {
-                "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
-                "legendFormat": "95th percentile",
-                "refId": "B"
-              },
-              {
-                "expr": "histogram_quantile(0.99, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
-                "legendFormat": "99th percentile",
-                "refId": "C"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "s"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
-          },
-          {
-            "id": 7,
-            "title": "Top Pages by Load Rate",
-            "type": "barchart",
-            "targets": [
-              {
-                "expr": "topk(10, sum(rate(bookwork_frontend_page_loads_total[5m])) by (page))",
-                "legendFormat": "{{page}}",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "reqps"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
-          },
-          {
-            "id": 8,
-            "title": "Cache Hit Rate",
-            "type": "stat",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_cache_hits_total[5m])) / (sum(rate(bookwork_frontend_cache_hits_total[5m])) + sum(rate(bookwork_frontend_cache_misses_total[5m]))) * 100",
-                "legendFormat": "Cache Hit Rate",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "thresholds": {
-                  "steps": [
-                    {"color": "red", "value": null},
-                    {"color": "yellow", "value": 70},
-                    {"color": "green", "value": 90}
-                  ]
-                },
-                "unit": "percent"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 12, "y": 16}
-          },
-          {
-            "id": 9,
-            "title": "Component Load Time (95th percentile)",
-            "type": "barchart",
-            "targets": [
-              {
-                "expr": "topk(5, histogram_quantile(0.95, sum(rate(bookwork_frontend_component_load_duration_seconds_bucket[5m])) by (component, le)))",
-                "legendFormat": "{{component}}",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "s"
-              }
-            },
-            "gridPos": {"h": 8, "w": 6, "x": 18, "y": 16}
-          },
-          {
-            "id": 10,
-            "title": "Security Events",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_security_events_total[5m])) by (event_type)",
-                "legendFormat": "{{event_type}}",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "reqps"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
-          },
-          {
-            "id": 11,
-            "title": "Rate Limit Hits",
-            "type": "timeseries",
-            "targets": [
-              {
-                "expr": "sum(rate(bookwork_frontend_rate_limit_hits_total[5m])) by (endpoint)",
-                "legendFormat": "{{endpoint}}",
-                "refId": "A"
-              }
-            ],
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "palette-classic"
-                },
-                "unit": "reqps"
-              }
-            },
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
-          }
-        ],
-        "templating": {
-          "list": [
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Request Rate",
+          "type": "stat",
+          "targets": [
             {
-              "name": "instance",
-              "type": "query",
-              "query": "label_values(request_count, instance)",
-              "current": {
-                "value": "All",
-                "text": "All"
-              },
-              "includeAll": true,
-              "allValue": ".*"
+              "expr": "sum(rate(bookwork_frontend_http_requests_total[5m]))",
+              "legendFormat": "Requests/sec",
+              "refId": "A"
             }
-          ]
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 50},
+                  {"color": "red", "value": 100}
+                ]
+              },
+              "unit": "reqps"
+            }
+          },
+          "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+        },
+        {
+          "id": 2,
+          "title": "Error Rate",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])) * 100",
+              "legendFormat": "Error Rate %",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+        },
+        {
+          "id": 3,
+          "title": "Average Latency",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
+              "legendFormat": "Avg Latency",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.5},
+                  {"color": "red", "value": 1.0}
+                ]
+              },
+              "unit": "s"
+            }
+          },
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+        },
+        {
+          "id": 4,
+          "title": "Active Sessions",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "bookwork_frontend_active_sessions",
+              "legendFormat": "Active Sessions",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+        },
+        {
+          "id": 5,
+          "title": "Request Volume by Status Code",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(bookwork_frontend_http_requests_total[5m])) by (status)",
+              "legendFormat": "{{status}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "reqps"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+        },
+        {
+          "id": 6,
+          "title": "Latency Percentiles",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "50th percentile",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "95th percentile",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "99th percentile",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "s"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+        },
+        {
+          "id": 7,
+          "title": "Event Loop Lag - Critical Node.js Performance",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "bookwork_frontend_nodejs_eventloop_lag_mean_seconds",
+              "legendFormat": "Mean Lag",
+              "refId": "A"
+            },
+            {
+              "expr": "bookwork_frontend_nodejs_eventloop_lag_p95_seconds",
+              "legendFormat": "95th Percentile",
+              "refId": "B"
+            },
+            {
+              "expr": "bookwork_frontend_nodejs_eventloop_lag_p99_seconds",
+              "legendFormat": "99th Percentile",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "s",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.05},
+                  {"color": "red", "value": 0.1}
+                ]
+              }
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+        },
+        {
+          "id": 8,
+          "title": "Node.js Active Resources - Memory Leak Detection",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "bookwork_frontend_nodejs_active_handles_total",
+              "legendFormat": "Active Handles",
+              "refId": "A"
+            },
+            {
+              "expr": "bookwork_frontend_nodejs_active_requests_total",
+              "legendFormat": "Active Requests",
+              "refId": "B"
+            },
+            {
+              "expr": "bookwork_frontend_nodejs_active_resources_total",
+              "legendFormat": "Total Resources",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
         }
-      }
+      ]
+    }
