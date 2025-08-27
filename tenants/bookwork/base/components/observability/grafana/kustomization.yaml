@@ -7,4 +7,3 @@ resources:
 - graf-deployment.yaml
 - graf-service.yaml
 - dashboards/bookwork-dashboard.yaml
-- dashboards/frontend-application-dashboard.yaml

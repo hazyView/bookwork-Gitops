@@ -623,3 +623,63 @@ data:
         }
       ]
     }
+  frontend-application-dashboard.json: |
+    {
+      "id": null,
+      "uid": "bookwork-frontend-app",
+      "title": "Bookwork Frontend Application Metrics",
+      "tags": ["bookwork", "frontend", "application", "sveltekit"],
+      "style": "dark",
+      "timezone": "browser",
+      "editable": false,
+      "schemaVersion": 38,
+      "version": 1,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "liveNow": false,
+      "weekStart": "",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+        "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+      },
+      "refresh": "30s",
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Application Health Overview",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "up{job=\"bookwork-frontend\"}",
+              "legendFormat": "Service Up",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "short"
+            }
+          }
+        }
+      ]
+    }

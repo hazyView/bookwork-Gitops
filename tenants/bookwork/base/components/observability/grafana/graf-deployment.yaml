@@ -97,10 +97,6 @@ spec:
         - name: dashboards
           mountPath: /var/lib/grafana/dashboards
           readOnly: true
-        - name: frontend-dashboards
-          mountPath: /var/lib/grafana/dashboards/frontend-application-dashboard.json
-          subPath: frontend-application-dashboard.json
-          readOnly: true
         - name: storage
           mountPath: /var/lib/grafana
         securityContext:
@@ -125,10 +121,6 @@ spec:
       - name: dashboards
         configMap:
           name: grafana-dashboards
-          defaultMode: 420
-      - name: frontend-dashboards
-        configMap:
-          name: grafana-frontend-dashboard
           defaultMode: 420
       - name: storage
         emptyDir:
