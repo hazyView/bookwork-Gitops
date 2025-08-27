@@ -76,6 +76,18 @@ data:
     
     [dashboards]
     default_home_dashboard_path = /var/lib/grafana/dashboards/bookwork-infrastructure.json
+    
+    [database]
+    wal = true
+    
+    [server]
+    serve_from_sub_path = false
+    
+    [plugins]
+    allow_loading_unsigned_plugins = 
+    
+    [live]
+    max_connections = 100
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -120,10 +132,10 @@ data:
       orgId: 1
       folder: ''
       type: file
-      disableDeletion: false
-      editable: true
-      updateIntervalSeconds: 10
-      allowUiUpdates: true
+      disableDeletion: true
+      editable: false
+      updateIntervalSeconds: 30
+      allowUiUpdates: false
       options:
         path: /var/lib/grafana/dashboards
         foldersFromFilesStructure: false
