@@ -146,11 +146,20 @@ data:
   bookwork-slo-dashboard.json: |
     {
       "id": null,
+      "uid": "bookwork-slo-dashboard",
       "title": "Bookwork SLO/SLI Dashboard",
       "tags": ["bookwork", "slo", "sli", "sla", "reliability"],
       "style": "dark",
       "timezone": "browser",
       "refresh": "30s",
+      "schemaVersion": 38,
+      "version": 1,
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "weekStart": "",
       "time": {
         "from": "now-24h",
         "to": "now"
@@ -385,11 +394,20 @@ data:
   bookwork-frontend-comprehensive.json: |
     {
       "id": null,
+      "uid": "bookwork-frontend-comprehensive",
       "title": "Bookwork Frontend Metrics - Comprehensive",
       "tags": ["bookwork", "frontend", "nodejs"],
       "style": "dark",
       "timezone": "browser",
       "refresh": "30s",
+      "schemaVersion": 38,
+      "version": 1,
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "weekStart": "",
       "time": {
         "from": "now-1h",
         "to": "now"

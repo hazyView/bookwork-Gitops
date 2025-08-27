@@ -126,4 +126,4 @@ data:
       allowUiUpdates: false
       options:
         path: /var/lib/grafana/dashboards
-        foldersFromFilesStructure: true
+        foldersFromFilesStructure: false
