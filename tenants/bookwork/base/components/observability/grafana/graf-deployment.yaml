@@ -87,12 +87,20 @@ spec:
         - name: config
           mountPath: /etc/grafana/grafana.ini
           subPath: grafana.ini
+          readOnly: true
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
+          readOnly: true
         - name: dashboard-providers
           mountPath: /etc/grafana/provisioning/dashboards
+          readOnly: true
         - name: dashboards
           mountPath: /var/lib/grafana/dashboards
+          readOnly: true
+        - name: frontend-dashboards
+          mountPath: /var/lib/grafana/dashboards/frontend-application-dashboard.json
+          subPath: frontend-application-dashboard.json
+          readOnly: true
         - name: storage
           mountPath: /var/lib/grafana
         securityContext:
@@ -117,6 +125,10 @@ spec:
       - name: dashboards
         configMap:
           name: grafana-dashboards
+          defaultMode: 420
+      - name: frontend-dashboards
+        configMap:
+          name: grafana-frontend-dashboard
           defaultMode: 420
       - name: storage
         emptyDir:

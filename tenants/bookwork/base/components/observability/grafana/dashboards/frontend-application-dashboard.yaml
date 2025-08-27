@@ -19,8 +19,14 @@ data:
       "tags": ["bookwork", "frontend", "application", "sveltekit"],
       "style": "dark",
       "timezone": "browser",
-      "editable": true,
+      "editable": false,
+      "schemaVersion": 38,
+      "version": 1,
+      "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
+      "links": [],
+      "liveNow": false,
+      "weekStart": "",
       "time": {
         "from": "now-1h",
         "to": "now"

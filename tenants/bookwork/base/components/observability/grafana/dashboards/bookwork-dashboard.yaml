@@ -13,11 +13,20 @@ data:
   bookwork-infrastructure.json: |
     {
       "id": null,
+      "uid": "bookwork-infrastructure",
       "title": "Bookwork Infrastructure Metrics",
       "tags": ["bookwork", "infrastructure", "kubernetes"],
       "style": "dark",
       "timezone": "browser",
       "refresh": "30s",
+      "schemaVersion": 38,
+      "version": 1,
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "weekStart": "",
       "time": {
         "from": "now-1h",
         "to": "now"
