@@ -29,12 +29,15 @@ data:
     [security]
     disable_gravatar = true
     
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/bookwork-frontend-comprehensive.json
+    
     [auth]
     disable_login_form = false
     disable_signout_menu = false
     
     [auth.anonymous]
-    enabled = true
+    enabled = false
     org_role = Viewer
     
     [auth.github]
@@ -73,10 +76,10 @@ data:
     enabled = true
     
     [feature_toggles]
-    enable = ngalert,rbac
+    enable = ngalert
     
     [rbac]
-    enabled = true
+    enabled = false
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -116,12 +119,4 @@ metadata:
 data:
   dashboard-providers.yaml: |
     apiVersion: 1
-    providers:
-    - name: 'bookwork-dashboards'
-      orgId: 1
-      type: file
-      disableDeletion: false
-      updateIntervalSeconds: 10
-      allowUiUpdates: false
-      options:
-        path: /var/lib/grafana/dashboards
+    providers: []

@@ -9,4 +9,5 @@ resources:
 - team-sync-job.yaml
 - team-sync-cronjob.yaml
 - folder-permissions-job.yaml
+- dashboard-import-job.yaml
 - dashboards/bookwork-dashboard.yaml
