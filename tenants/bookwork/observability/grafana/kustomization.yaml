@@ -8,4 +8,5 @@ resources:
 - graf-service.yaml
 - team-sync-job.yaml
 - team-sync-cronjob.yaml
+- folder-permissions-job.yaml
 - dashboards/bookwork-dashboard.yaml
