@@ -129,7 +129,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-folder-provisioning
+  name: grafana-access-control
   namespace: monitoring
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -137,7 +137,7 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/part-of: bookwork-observability
 data:
-  folders.yaml: |
+  access-control.yaml: |
     apiVersion: 1
     folders:
       - title: 'Bookwork Dashboards'
