@@ -5,7 +5,7 @@ resources:
 - components/infrastructure
 - components/frontend
 - components/api
-- components/observability
+# Observability moved to dedicated application
 # Commented out resource avoid DB costs
 #- ../../components/api/api/deployment.yaml
 #- ../../components/api/service.yaml
