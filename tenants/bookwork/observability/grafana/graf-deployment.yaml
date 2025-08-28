@@ -94,12 +94,6 @@ spec:
         - name: dashboard-providers
           mountPath: /etc/grafana/provisioning/dashboards
           readOnly: true
-        - name: teams
-          mountPath: /etc/grafana/provisioning/teams
-          readOnly: true
-        - name: folders
-          mountPath: /etc/grafana/provisioning/folders
-          readOnly: true
         - name: dashboards
           mountPath: /var/lib/grafana/dashboards
           readOnly: true
@@ -123,14 +117,6 @@ spec:
       - name: dashboard-providers
         configMap:
           name: grafana-dashboard-providers
-          defaultMode: 420
-      - name: teams
-        configMap:
-          name: grafana-teams
-          defaultMode: 420
-      - name: folders
-        configMap:
-          name: grafana-folders
           defaultMode: 420
       - name: dashboards
         configMap:

@@ -118,53 +118,9 @@ data:
     providers:
     - name: 'bookwork-dashboards'
       orgId: 1
-      folderUid: 'bookwork-dashboards'
       type: file
       disableDeletion: false
       updateIntervalSeconds: 10
       allowUiUpdates: false
       options:
         path: /var/lib/grafana/dashboards
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-teams
-  namespace: monitoring
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-  labels:
-    app.kubernetes.io/name: grafana
-    app.kubernetes.io/part-of: bookwork-observability
-data:
-  teams.yaml: |
-    apiVersion: 1
-    teams:
-      - name: 'Bookwork-Viewers'
-        uid: 'bookwork-viewers'
-        email: 'bookwork-team@bookwork-demo.com'
-        avatarUrl: ''
-        orgId: 1
-        members: []
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-folders
-  namespace: monitoring
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-  labels:
-    app.kubernetes.io/name: grafana
-    app.kubernetes.io/part-of: bookwork-observability
-data:
-  folders.yaml: |
-    apiVersion: 1
-    deleteFolders: []
-    folders:
-      - uid: 'bookwork-dashboards'
-        title: 'Bookwork Dashboards'
-        permissions:
-          - team: 'Bookwork-Viewers'
-            permission: 1
