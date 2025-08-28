@@ -6,4 +6,5 @@ resources:
 - graf-cm.yaml
 - graf-deployment.yaml
 - graf-service.yaml
+- folder-permissions-job.yaml
 - dashboards/bookwork-dashboard.yaml
