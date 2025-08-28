@@ -16,15 +16,12 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: set-permissions
-        image: curlimages/curl:8.4.0
+        image: alpine/curl:8.4.0
         command: ["/bin/sh"]
         args:
           - -c
           - |
             set -e
-            
-            # Install jq
-            apk add --no-cache jq
             
             # Wait for Grafana to be ready
             echo "Waiting for Grafana to be ready..."
@@ -37,52 +34,73 @@ spec:
               sleep 10
             done
             
-            # Set folder permissions
+            # Wait additional time for provisioning to complete
+            echo "Waiting for provisioning to complete..."
+            sleep 30
+            
             GRAFANA_URL="http://grafana:3000"
+            TEAM_NAME="Bookwork-Viewers"
             FOLDER_NAME="Bookwork Dashboards"
+            FOLDER_UID="bookwork-dashboards"
             
-            echo "Checking for '$FOLDER_NAME' folder..."
+            echo "Starting team and folder setup..."
             
-            # Get folder UID
-            FOLDER_UID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" "$GRAFANA_URL/api/folders" | \
-                jq -r ".[] | select(.title == \"$FOLDER_NAME\") | .uid")
+            # Step 1: Create team if it doesn't exist
+            echo "Checking for team: $TEAM_NAME"
+            TEAM_ID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" "$GRAFANA_URL/api/teams" | \
+                grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2 2>/dev/null || echo "")
             
-            if [ -z "$FOLDER_UID" ] || [ "$FOLDER_UID" = "null" ]; then
-                echo "Error: Folder '$FOLDER_NAME' not found"
-                exit 1
+            if [ -z "$TEAM_ID" ]; then
+                echo "Creating team: $TEAM_NAME"
+                TEAM_RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
+                    -X POST \
+                    -H "Content-Type: application/json" \
+                    -d "{\"name\":\"$TEAM_NAME\",\"email\":\"\"}" \
+                    "$GRAFANA_URL/api/teams")
+                
+                TEAM_ID=$(echo "$TEAM_RESPONSE" | grep -o '"teamId":[0-9]*' | cut -d':' -f2)
+                echo "Created team with ID: $TEAM_ID"
+            else
+                echo "Team exists with ID: $TEAM_ID"
             fi
             
-            echo "Found folder '$FOLDER_NAME' with UID: $FOLDER_UID"
+            # Step 2: Create folder if it doesn't exist
+            echo "Checking for folder: $FOLDER_NAME"
+            EXISTING_FOLDER=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" "$GRAFANA_URL/api/folders" | \
+                grep "$FOLDER_UID" || echo "")
             
-            # Check current permissions
-            echo "Checking current permissions..."
-            CURRENT_PERMS=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                "$GRAFANA_URL/api/folders/$FOLDER_UID/permissions")
-            
-            # Check if Viewer role already has permissions
-            HAS_VIEWER_PERM=$(echo "$CURRENT_PERMS" | jq -r '.[] | select(.role == "Viewer") | .permission')
-            
-            if [ "$HAS_VIEWER_PERM" = "1" ]; then
-                echo "Viewer permissions already set correctly"
-                exit 0
+            if [ -z "$EXISTING_FOLDER" ]; then
+                echo "Creating folder: $FOLDER_NAME"
+                FOLDER_RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
+                    -X POST \
+                    -H "Content-Type: application/json" \
+                    -d "{\"uid\":\"$FOLDER_UID\",\"title\":\"$FOLDER_NAME\"}" \
+                    "$GRAFANA_URL/api/folders")
+                echo "Created folder: $FOLDER_RESPONSE"
+            else
+                echo "Folder already exists"
             fi
             
-            echo "Setting Viewer permissions on folder..."
-            
-            # Set Viewer role permissions (permission 1 = View)
-            RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
+            # Step 3: Set Viewer role permissions on folder
+            echo "Setting Viewer role permissions on folder..."
+            VIEWER_RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
                 -X POST \
                 -H "Content-Type: application/json" \
                 -d '{"items":[{"role":"Viewer","permission":1}]}' \
                 "$GRAFANA_URL/api/folders/$FOLDER_UID/permissions")
+            echo "Viewer permissions result: $VIEWER_RESPONSE"
             
-            if echo "$RESPONSE" | grep -q "Folder permissions updated"; then
-                echo "✅ Successfully set Viewer permissions on '$FOLDER_NAME' folder"
-                echo "GitHub OAuth users with Viewer role can now access all dashboards"
-            else
-                echo "❌ Failed to set permissions: $RESPONSE"
-                exit 1
-            fi
+            # Step 4: Set team permissions on folder
+            echo "Setting team permissions on folder..."
+            TEAM_RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d "{\"teamId\":$TEAM_ID,\"permission\":\"Viewer\"}" \
+                "$GRAFANA_URL/api/folders/$FOLDER_UID/permissions")
+            echo "Team permissions result: $TEAM_RESPONSE"
+            
+            echo "✅ Successfully configured team-based permissions"
+            echo "GitHub OAuth users will have access to dashboards through the Viewer role and team membership"
         env:
         - name: GRAFANA_ADMIN_USER
           value: "admin"

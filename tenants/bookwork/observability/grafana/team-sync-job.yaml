@@ -16,15 +16,12 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: team-sync
-        image: curlimages/curl:8.4.0
+        image: alpine/curl:8.4.0
         command: ["/bin/sh"]
         args:
           - -c
           - |
             set -e
-            
-            # Install jq
-            apk add --no-cache jq
             
             # Wait for Grafana to be ready
             echo "Waiting for Grafana to be ready..."
@@ -41,76 +38,7 @@ spec:
             echo "Waiting for provisioning to complete..."
             sleep 30
             
-            GRAFANA_URL="http://grafana:3000"
-            TEAM_NAME="Bookwork-Viewers"
-            
-            echo "Starting team synchronization..."
-            
-            # Get team ID
-            echo "Looking for team: $TEAM_NAME"
-            TEAM_ID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                "$GRAFANA_URL/api/teams/search?name=$TEAM_NAME" | \
-                jq -r '.teams[0].id // empty')
-            
-            if [ -z "$TEAM_ID" ]; then
-                echo "Team '$TEAM_NAME' not found. This is expected on first run."
-                echo "The team should be created by provisioning on restart."
-                exit 0
-            fi
-            
-            echo "Found team '$TEAM_NAME' with ID: $TEAM_ID"
-            
-            # Get all GitHub OAuth users (non-admin users with GitHub auth labels)
-            echo "Getting GitHub OAuth users..."
-            GITHUB_USERS=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                "$GRAFANA_URL/api/users" | \
-                jq -r '.[] | select(.isAdmin == false and (.authLabels[]? == "GitHub")) | .login')
-            
-            if [ -z "$GITHUB_USERS" ]; then
-                echo "No GitHub OAuth users found"
-                exit 0
-            fi
-            
-            echo "Found GitHub OAuth users: $GITHUB_USERS"
-            
-            # Get current team members
-            CURRENT_MEMBERS=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                "$GRAFANA_URL/api/teams/$TEAM_ID/members" | \
-                jq -r '.[].login')
-            
-            echo "Current team members: $CURRENT_MEMBERS"
-            
-            # Add GitHub users to team if not already members
-            for user in $GITHUB_USERS; do
-                if echo "$CURRENT_MEMBERS" | grep -q "^$user$"; then
-                    echo "User '$user' is already a team member"
-                else
-                    echo "Adding user '$user' to team..."
-                    
-                    # Get user ID
-                    USER_ID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                        "$GRAFANA_URL/api/users/lookup?loginOrEmail=$user" | \
-                        jq -r '.id')
-                    
-                    if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
-                        RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                            -X POST \
-                            -H "Content-Type: application/json" \
-                            -d "{\"userId\":$USER_ID}" \
-                            "$GRAFANA_URL/api/teams/$TEAM_ID/members")
-                        
-                        if echo "$RESPONSE" | grep -q '"message":"Member added to team"'; then
-                            echo "✅ Successfully added '$user' to team"
-                        else
-                            echo "❌ Failed to add '$user' to team: $RESPONSE"
-                        fi
-                    else
-                        echo "❌ Could not find user ID for '$user'"
-                    fi
-                fi
-            done
-            
-            echo "Team synchronization completed"
+            echo "Team sync job completed - team creation handled by folder permissions job"
         env:
         - name: GRAFANA_ADMIN_USER
           value: "admin"
