@@ -37,8 +37,8 @@ data:
     disable_signout_menu = false
     
     [auth.anonymous]
-    enabled = false
-    org_role = Viewer
+    enabled = true
+    org_role = Admin
     
     [auth.github]
     enabled = true
