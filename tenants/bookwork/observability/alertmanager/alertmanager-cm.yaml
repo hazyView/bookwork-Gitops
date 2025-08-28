@@ -108,36 +108,26 @@ data:
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/frontend'
             send_resolved: true
-            title: 'Bookwork Frontend Alert'
-            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
 
       - name: 'frontend-critical'
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/frontend-critical'
             send_resolved: true
-            title: '🚨 CRITICAL: Bookwork Frontend Alert'
-            text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
 
       - name: 'frontend-warnings'
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/frontend-warnings'
             send_resolved: true
-            title: '⚠️ WARNING: Bookwork Frontend Alert'
-            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
 
       - name: 'frontend-info'
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/frontend-info'
             send_resolved: true
-            title: 'ℹ️ INFO: Bookwork Frontend Alert'
-            text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
 
       - name: 'security-team'
         webhook_configs:
           - url: 'http://alertmanager-slack-bridge:5001/security'
             send_resolved: true
-            title: '🔒 SECURITY ALERT: Bookwork Frontend'
-            text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
 
       # General receivers
       - name: 'critical-alerts'
