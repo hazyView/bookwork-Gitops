@@ -18,17 +18,16 @@ data:
     [database]
     type = sqlite3
     
-    [security]
-    disable_gravatar = true
-    
     [users]
     allow_sign_up = true
     auto_assign_org = true
     auto_assign_org_role = Viewer
     viewers_can_edit = false
     editors_can_admin = false
-    # Allow viewers to access all dashboards
     default_theme = dark
+    
+    [security]
+    disable_gravatar = true
     
     [auth]
     disable_login_form = false
@@ -74,9 +73,6 @@ data:
     
     [feature_toggles]
     enable = ngalert
-    
-    [dashboards]
-    default_home_dashboard_path = /var/lib/grafana/dashboards/bookwork-infrastructure.json
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -119,6 +115,9 @@ data:
     providers:
     - name: 'default'
       orgId: 1
+      folder: 'Bookwork Dashboards'
       type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
       options:
         path: /var/lib/grafana/dashboards
