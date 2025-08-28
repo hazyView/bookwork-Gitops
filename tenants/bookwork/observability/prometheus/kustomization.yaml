@@ -6,6 +6,4 @@ resources:
 - prom-cm.yaml
 - prom-deployment.yaml
 - prom-service.yaml
-- prom-servicemonitor.yaml
-- bookwork-frontend-servicemonitor.yaml
 - recording-rules.yaml

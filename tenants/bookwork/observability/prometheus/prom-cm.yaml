@@ -118,8 +118,8 @@ data:
           action: replace
           target_label: kubernetes_container_name
 
-      # Bookwork API (when enabled)
-      - job_name: 'bookwork-api'
+      # Bookwork Frontend (when enabled)
+      - job_name: 'bookwork-frontend'
         kubernetes_sd_configs:
         - role: endpoints
           namespaces:
@@ -128,18 +128,34 @@ data:
         relabel_configs:
         - source_labels: [__meta_kubernetes_service_name]
           action: keep
-          regex: bookwork-api
+          regex: bookwork-frontend
         - source_labels: [__meta_kubernetes_endpoint_port_name]
           action: keep
-          regex: http
+          regex: metrics
         - source_labels: [__meta_kubernetes_namespace]
           target_label: namespace
         - source_labels: [__meta_kubernetes_service_name]
           target_label: service
         - source_labels: [__meta_kubernetes_pod_name]
           target_label: pod
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          target_label: container
+        - target_label: job
+          replacement: bookwork-frontend
         metrics_path: /metrics
-        scrape_interval: 30s
+        scrape_interval: 15s
+        scrape_timeout: 10s
+        metric_relabel_configs:
+        - source_labels: [__name__]
+          regex: '^(request_count|request_latency_seconds.*|error_count|bookwork_frontend_.*)$'
+          action: keep
+        - source_labels: [__name__]
+          regex: '^bookwork_frontend_(.+)$'
+          target_label: __name__
+          replacement: '${1}'
+          action: replace
+        - regex: '^(pod|container)$'
+          action: labeldrop
 
       # NGINX Ingress Controller metrics
       - job_name: 'nginx-ingress'
