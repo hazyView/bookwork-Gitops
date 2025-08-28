@@ -27,9 +27,12 @@ data:
     auto_assign_org_role = Viewer
     viewers_can_edit = false
     editors_can_admin = false
+    # Allow viewers to access all dashboards
+    default_theme = dark
     
     [auth]
     disable_login_form = false
+    disable_signout_menu = false
     
     [auth.anonymous]
     enabled = false
@@ -116,12 +119,6 @@ data:
     providers:
     - name: 'default'
       orgId: 1
-      folder: ''
       type: file
-      disableDeletion: false
-      editable: true
-      updateIntervalSeconds: 10
-      allowUiUpdates: true
       options:
         path: /var/lib/grafana/dashboards
-        foldersFromFilesStructure: false

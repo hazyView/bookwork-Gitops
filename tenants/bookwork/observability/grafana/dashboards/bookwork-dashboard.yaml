@@ -643,13 +643,11 @@ data:
     }
   frontend-application-dashboard.json: |
     {
-      "id": null,
       "uid": "bookwork-frontend-app",
       "title": "Bookwork Frontend Application Metrics",
       "tags": ["bookwork", "frontend", "application", "sveltekit"],
       "style": "dark",
       "timezone": "browser",
-      "editable": false,
       "schemaVersion": 38,
       "version": 1,
       "fiscalYearStartMonth": 0,
