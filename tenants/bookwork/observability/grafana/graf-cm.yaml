@@ -129,7 +129,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-access-control
+  name: grafana-folder-provisioning
   namespace: monitoring
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -137,19 +137,11 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/part-of: bookwork-observability
 data:
-  access-control.yaml: |
+  folders.yaml: |
     apiVersion: 1
-    
-    roles:
-      - name: 'bookwork-dashboards:viewer'
-        uid: 'bookwork_dashboard_viewer_role'
-        description: 'Can view Bookwork application dashboards'
+    folders:
+      - title: 'Bookwork Dashboards'
+        uid: 'bookwork-folder'
         permissions:
-          - action: 'dashboards:read'
-            scope: 'folders:title:Bookwork Dashboards'
-          - action: 'folders:read'
-            scope: 'folders:title:Bookwork Dashboards'
-    
-    assignments:
-      - roleUid: 'bookwork_dashboard_viewer_role'
-        builtInRoles: ['Viewer']
+          - permission: 1
+            role: 'Viewer'
