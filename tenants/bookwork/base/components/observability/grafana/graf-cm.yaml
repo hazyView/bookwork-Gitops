@@ -47,8 +47,6 @@ data:
     allowed_organizations = 
     team_ids = 
     role_attribute_path = 
-    # Grant viewer access to GitHub users for dashboard viewing
-    auto_assign_org_role = Viewer
     # Disable admin assignment via GitHub OAuth
     allow_assign_grafana_admin = false
     # Skip organization member API calls for better compatibility
