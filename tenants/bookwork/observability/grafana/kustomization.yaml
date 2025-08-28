@@ -7,4 +7,5 @@ resources:
 - graf-deployment.yaml
 - graf-service.yaml
 - team-sync-job.yaml
+- team-sync-cronjob.yaml
 - dashboards/bookwork-dashboard.yaml

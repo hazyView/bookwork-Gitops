@@ -37,6 +37,10 @@ spec:
               sleep 10
             done
             
+            # Wait additional time for provisioning to complete
+            echo "Waiting for provisioning to complete..."
+            sleep 30
+            
             GRAFANA_URL="http://grafana:3000"
             TEAM_NAME="Bookwork-Viewers"
             
