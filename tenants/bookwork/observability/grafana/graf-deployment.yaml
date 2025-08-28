@@ -91,12 +91,6 @@ spec:
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
           readOnly: true
-        - name: dashboard-providers
-          mountPath: /etc/grafana/provisioning/dashboards
-          readOnly: true
-        - name: dashboards
-          mountPath: /var/lib/grafana/dashboards
-          readOnly: true
         - name: storage
           mountPath: /var/lib/grafana
         securityContext:
@@ -113,14 +107,6 @@ spec:
       - name: datasources
         configMap:
           name: grafana-datasources
-          defaultMode: 420
-      - name: dashboard-providers
-        configMap:
-          name: grafana-dashboard-providers
-          defaultMode: 420
-      - name: dashboards
-        configMap:
-          name: grafana-dashboards
           defaultMode: 420
       - name: storage
         emptyDir:
