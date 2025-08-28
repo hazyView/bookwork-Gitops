@@ -15,17 +15,19 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 0  # Run as root to allow package installation
           containers:
           - name: team-sync
-            image: alpine/curl:8.4.0
+            image: alpine:3.18
             command: ["/bin/sh"]
             args:
               - -c
               - |
                 set -e
                 
-                # Install jq (Alpine base image allows package installation)
-                apk add --no-cache jq
+                # Install required packages
+                apk add --no-cache curl jq
                 
                 GRAFANA_URL="http://grafana:3000"
                 TEAM_NAME="Bookwork-Viewers"
