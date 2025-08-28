@@ -30,7 +30,7 @@ data:
     disable_gravatar = true
     
     [dashboards]
-    default_home_dashboard_path = /var/lib/grafana/dashboards/bookwork-frontend-comprehensive.json
+    # Let Grafana use default home dashboard behavior
     
     [auth]
     disable_login_form = false
@@ -119,4 +119,14 @@ metadata:
 data:
   dashboard-providers.yaml: |
     apiVersion: 1
-    providers: []
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: 'Bookwork Dashboards'
+      type: file
+      disableDeletion: false
+      editable: true
+      updateIntervalSeconds: 30
+      allowUiUpdates: true
+      options:
+        path: /var/lib/grafana/dashboards
