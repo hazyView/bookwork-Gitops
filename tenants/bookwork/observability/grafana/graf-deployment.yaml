@@ -94,6 +94,9 @@ spec:
         - name: dashboard-providers
           mountPath: /etc/grafana/provisioning/dashboards
           readOnly: true
+        - name: access-control
+          mountPath: /etc/grafana/provisioning/access-control
+          readOnly: true
         - name: dashboards
           mountPath: /var/lib/grafana/dashboards
           readOnly: true
@@ -117,6 +120,10 @@ spec:
       - name: dashboard-providers
         configMap:
           name: grafana-dashboard-providers
+          defaultMode: 420
+      - name: access-control
+        configMap:
+          name: grafana-access-control
           defaultMode: 420
       - name: dashboards
         configMap:

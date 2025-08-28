@@ -72,7 +72,10 @@ data:
     enabled = true
     
     [feature_toggles]
-    enable = ngalert
+    enable = ngalert,rbac
+    
+    [rbac]
+    enabled = true
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -113,11 +116,40 @@ data:
   dashboard-providers.yaml: |
     apiVersion: 1
     providers:
-    - name: 'default'
+    - name: 'bookwork-dashboards'
       orgId: 1
       folder: 'Bookwork Dashboards'
       type: file
       disableDeletion: false
       updateIntervalSeconds: 10
+      allowUiUpdates: false
       options:
         path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-access-control
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: bookwork-observability
+data:
+  access-control.yaml: |
+    apiVersion: 1
+    
+    roles:
+      - name: 'bookwork-dashboards:viewer'
+        uid: 'bookwork_dashboard_viewer_role'
+        description: 'Can view Bookwork application dashboards'
+        permissions:
+          - action: 'dashboards:read'
+            scope: 'folders:title:Bookwork Dashboards'
+          - action: 'folders:read'
+            scope: 'folders:title:Bookwork Dashboards'
+    
+    assignments:
+      - roleUid: 'bookwork_dashboard_viewer_role'
+        builtInRoles: ['Viewer']
