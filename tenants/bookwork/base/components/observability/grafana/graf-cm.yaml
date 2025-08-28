@@ -56,10 +56,10 @@ data:
     
     [log]
     mode = console
-    level = debug
+    level = info
     
     [log.console]
-    level = debug
+    level = info
     format = json
     
     [metrics]
@@ -118,8 +118,7 @@ data:
     providers:
     - name: 'default'
       orgId: 1
-      folder: 'General'
-      folderUid: ''
+      folder: ''
       type: file
       disableDeletion: false
       editable: true
