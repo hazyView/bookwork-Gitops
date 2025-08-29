@@ -20,6 +20,7 @@ spec:
       labels:
         app.kubernetes.io/name: prometheus
         app.kubernetes.io/part-of: bookwork-observability
+        argocd.argoproj.io/instance: bookwork-observability
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"

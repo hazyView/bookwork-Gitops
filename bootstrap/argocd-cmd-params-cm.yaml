@@ -5,3 +5,8 @@ metadata:
   namespace: argocd
 data:
   server.insecure: "true"  # Required when running behind ingress with TLS termination
+  # Enable label-based resource tracking for better pod discovery
+  application.instanceLabelKey: "argocd.argoproj.io/instance"
+  controller.repo.server.timeout.seconds: "60"
+  # Enable resource tracking method that discovers child resources like pods
+  server.enable.grpc.web: "true"

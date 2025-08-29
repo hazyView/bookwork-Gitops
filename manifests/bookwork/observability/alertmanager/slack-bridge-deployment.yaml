@@ -18,6 +18,9 @@ spec:
     metadata:
       labels:
         app: alertmanager-slack-bridge
+        app.kubernetes.io/name: alertmanager-slack-bridge
+        app.kubernetes.io/part-of: bookwork-observability
+        argocd.argoproj.io/instance: bookwork-observability
         version: v1
     spec:
       containers:
