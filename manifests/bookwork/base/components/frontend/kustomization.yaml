@@ -4,3 +4,6 @@ namespace: bookwork
 resources:
 - deployment.yaml
 - service.yaml
+images:
+- name: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend
+  newTag: de1ce20
