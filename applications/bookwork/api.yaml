@@ -1,12 +1,13 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bookwork-frontend
+  name: bookwork-api
   namespace: argocd
   labels:
-    app.kubernetes.io/name: bookwork-frontend
+    app.kubernetes.io/name: bookwork-api
     app.kubernetes.io/part-of: bookwork
-    argocd.argoproj.io/instance: bookwork-frontend
+    app.kubernetes.io/component: api
   annotations:
     notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
     notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
@@ -21,32 +22,28 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: tenants/bookwork/base/components/frontend
+    path: manifests/bookwork/base/components/api
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: bookwork
   syncPolicy:
     automated:
-      prune: true
+      prune: false  # Manual sync for API for more control
       selfHeal: true
+      allowEmpty: false
     syncOptions:
-      - CreateNamespace=true
       - ServerSideApply=true
-    managedNamespaceMetadata:
-      labels:
-        argocd.argoproj.io/managed-by: bookwork-frontend
-  ignoreDifferences:
-  - group: apps
-    kind: Deployment
-    jsonPointers:
-    - /metadata/labels/app.kubernetes.io~1instance
-    - /spec/template/metadata/labels/app.kubernetes.io~1instance
-  - group: ""
-    kind: Service
-    jsonPointers:
-    - /metadata/labels/app.kubernetes.io~1instance
-  revisionHistoryLimit: 3
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
   info:
     - name: 'Sync Wave'
-      value: '10'
+      value: '5'
+    - name: 'Purpose'
+      value: 'Bookwork API backend service'
+    - name: 'Status'
+      value: 'Currently disabled in production - deployment commented out'

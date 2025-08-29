@@ -1,8 +1,13 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bookwork-observability
+  name: bookwork-frontend
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: bookwork-frontend
+    app.kubernetes.io/part-of: bookwork
+    app.kubernetes.io/component: frontend
   annotations:
     notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
     notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
@@ -17,22 +22,43 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: tenants/bookwork/observability
+    path: manifests/bookwork/base/components/frontend
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: monitoring
+    namespace: bookwork
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: bookwork-frontend
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /metadata/labels/app.kubernetes.io~1instance
+    - /spec/template/metadata/labels/app.kubernetes.io~1instance
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /metadata/labels/app.kubernetes.io~1instance
+  revisionHistoryLimit: 3
   info:
     - name: 'Sync Wave'
-      value: '15'
+      value: '10'
     - name: 'Purpose'
-      value: 'Complete observability stack: Prometheus, Grafana, AlertManager'
-    - name: 'Components'
-      value: 'Metrics collection, visualization, alerting'
+      value: 'Bookwork frontend application (SvelteKit)'
+    - name: 'Dependencies'
+      value: 'Infrastructure must be deployed first'

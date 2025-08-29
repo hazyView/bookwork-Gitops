@@ -1,0 +1,46 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bookwork-apps
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: bookwork-apps
+    app.kubernetes.io/part-of: bookwork
+    app.kubernetes.io/component: app-of-apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
+spec:
+  project: bookwork
+  source:
+    repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
+    path: applications/bookwork
+    targetRevision: HEAD
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  info:
+    - name: 'Sync Wave'
+      value: '5'
+    - name: 'Purpose'
+      value: 'App-of-apps pattern for complete Bookwork platform'
+    - name: 'Components'
+      value: 'Frontend, API, Infrastructure, Observability'
+    - name: 'Type'
+      value: 'Application management via GitOps automation'

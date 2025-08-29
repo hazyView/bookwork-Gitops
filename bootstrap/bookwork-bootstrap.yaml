@@ -18,7 +18,7 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: bootstrap/apps
+    path: applications/app-of-apps
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
