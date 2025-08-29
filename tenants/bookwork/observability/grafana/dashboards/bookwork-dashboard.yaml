@@ -62,7 +62,7 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*bookwork.*\"}[5m]) * 100",
+              "expr": "rate(container_cpu_usage_seconds_total{container=\"frontend\", namespace=\"bookwork\"}[5m]) * 100",
               "legendFormat": "{{pod}}"
             }
           ],
@@ -82,7 +82,7 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "container_memory_usage_bytes{pod=~\".*bookwork.*\"} / 1024 / 1024",
+              "expr": "container_memory_working_set_bytes{container=\"frontend\", namespace=\"bookwork\"} / 1024 / 1024",
               "legendFormat": "{{pod}}"
             }
           ],
@@ -102,11 +102,11 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "rate(container_network_receive_bytes_total{pod=~\".*bookwork.*\"}[5m])",
+              "expr": "rate(container_network_receive_bytes_total{container=\"frontend\", namespace=\"bookwork\"}[5m])",
               "legendFormat": "{{pod}} RX"
             },
             {
-              "expr": "rate(container_network_transmit_bytes_total{pod=~\".*bookwork.*\"}[5m])",
+              "expr": "rate(container_network_transmit_bytes_total{container=\"frontend\", namespace=\"bookwork\"}[5m])",
               "legendFormat": "{{pod}} TX"
             }
           ],
@@ -126,7 +126,7 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "rate(bookwork_frontend_http_requests_total[5m])",
+              "expr": "rate(request_count{job=\"bookwork-frontend\"}[5m])",
               "legendFormat": "Frontend Requests/sec"
             }
           ],
@@ -171,17 +171,17 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "(1 - (sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])))) * 100",
+              "expr": "(1 - (sum(rate(error_count{job=\"bookwork-frontend\"}[5m])) / sum(rate(request_count{job=\"bookwork-frontend\"}[5m])))) * 100",
               "legendFormat": "Availability %",
               "refId": "A"
             },
             {
-              "expr": "(1 - (sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])))) * 100",
+              "expr": "(sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) - sum(rate(error_count{job=\"bookwork-frontend\"}[5m]))) / sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) * 100",
               "legendFormat": "Success Rate %",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m])) * 1000",
+              "expr": "histogram_quantile(0.95, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m])) * 1000",
               "legendFormat": "P95 Latency (ms)",
               "refId": "C"
             }
@@ -224,17 +224,17 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "avg_over_time((1 - (increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[1h]) / increase(bookwork_frontend_http_requests_total[1h])))[30d:1h]) * 100",
+              "expr": "avg_over_time((1 - (increase(error_count{job=\"bookwork-frontend\"}[1h]) / increase(request_count{job=\"bookwork-frontend\"}[1h])))[30d:1h]) * 100",
               "legendFormat": "Availability SLO (99.9%)",
               "refId": "A"
             },
             {
-              "expr": "avg_over_time((1 - (increase(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[1h]) / increase(bookwork_frontend_http_requests_total[1h])))[30d:1h]) * 100",
+              "expr": "avg_over_time((1 - (increase(error_count{job=\"bookwork-frontend\"}[1h]) / increase(request_count{job=\"bookwork-frontend\"}[1h])))[30d:1h]) * 100",
               "legendFormat": "Success Rate SLO (99.5%)",
               "refId": "B"
             },
             {
-              "expr": "avg_over_time(histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[1h]))[30d:1h]) <= 0.5",
+              "expr": "avg_over_time(histogram_quantile(0.95, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[1h]))[30d:1h]) <= 0.5",
               "legendFormat": "Latency SLO (<500ms P95)",
               "refId": "C"
             }
@@ -257,17 +257,17 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[1h])) / sum(rate(bookwork_frontend_http_requests_total[1h]))) / 0.001",
+              "expr": "(sum(rate(error_count{job=\"bookwork-frontend\"}[1h])) / sum(rate(request_count{job=\"bookwork-frontend\"}[1h]))) / 0.001",
               "legendFormat": "Current Burn Rate (1h)",
               "refId": "A"
             },
             {
-              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[6h])) / sum(rate(bookwork_frontend_http_requests_total[6h]))) / 0.001",
+              "expr": "(sum(rate(error_count{job=\"bookwork-frontend\"}[6h])) / sum(rate(request_count{job=\"bookwork-frontend\"}[6h]))) / 0.001",
               "legendFormat": "6h Burn Rate",
               "refId": "B"
             },
             {
-              "expr": "(sum(rate(bookwork_frontend_http_requests_total{status=~\"5..\"}[24h])) / sum(rate(bookwork_frontend_http_requests_total[24h]))) / 0.001",
+              "expr": "(sum(rate(error_count{job=\"bookwork-frontend\"}[24h])) / sum(rate(request_count{job=\"bookwork-frontend\"}[24h]))) / 0.001",
               "legendFormat": "24h Burn Rate",
               "refId": "C"
             }
@@ -295,12 +295,12 @@ data:
           "type": "piechart",
           "targets": [
             {
-              "expr": "100 - (sum(increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[30d])) / sum(increase(bookwork_frontend_http_requests_total[30d])) * 100 / 0.1)",
+              "expr": "100 - (sum(increase(error_count{job=\"bookwork-frontend\"}[30d])) / sum(increase(request_count{job=\"bookwork-frontend\"}[30d])) * 100 / 0.1)",
               "legendFormat": "Budget Remaining",
               "refId": "A"
             },
             {
-              "expr": "sum(increase(bookwork_frontend_http_requests_total{status=~\"5..\"}[30d])) / sum(increase(bookwork_frontend_http_requests_total[30d])) * 100 / 0.1",
+              "expr": "sum(increase(error_count{job=\"bookwork-frontend\"}[30d])) / sum(increase(request_count{job=\"bookwork-frontend\"}[30d])) * 100 / 0.1",
               "legendFormat": "Budget Consumed",
               "refId": "B"
             }
@@ -321,17 +321,17 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "ALERTS{alertname=\"BookworkHighErrorRate\"} == 1",
+              "expr": "ALERTS{alertname=\"BookworkHighErrorRate\", alertstate=\"firing\"}",
               "legendFormat": "High Error Rate",
               "refId": "A"
             },
             {
-              "expr": "ALERTS{alertname=\"BookworkHighLatency\"} == 1",
+              "expr": "ALERTS{alertname=\"BookworkHighLatency\", alertstate=\"firing\"}",
               "legendFormat": "High Latency",
               "refId": "B"
             },
             {
-              "expr": "ALERTS{alertname=\"BookworkServiceDown\"} == 1",
+              "expr": "ALERTS{alertname=\"BookworkServiceDown\", alertstate=\"firing\"}",
               "legendFormat": "Service Down",
               "refId": "C"
             }
@@ -367,14 +367,9 @@ data:
               "refId": "A"
             },
             {
-              "expr": "up{job=\"bookwork-api\"}",
-              "legendFormat": "API Service",
-              "refId": "B"
-            },
-            {
               "expr": "up{job=\"prometheus\"}",
               "legendFormat": "Monitoring",
-              "refId": "C"
+              "refId": "B"
             }
           ],
           "fieldConfig": {
@@ -419,7 +414,7 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "sum(rate(bookwork_frontend_http_requests_total[5m]))",
+              "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m]))",
               "legendFormat": "Requests/sec",
               "refId": "A"
             }
@@ -447,7 +442,7 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "sum(rate(bookwork_frontend_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(bookwork_frontend_http_requests_total[5m])) * 100",
+              "expr": "sum(rate(error_count{job=\"bookwork-frontend\"}[5m])) / sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) * 100",
               "legendFormat": "Error Rate %",
               "refId": "A"
             }
@@ -475,7 +470,7 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "rate(bookwork_frontend_http_request_duration_seconds_sum[5m]) / rate(bookwork_frontend_http_request_duration_seconds_count[5m])",
+              "expr": "rate(request_latency_seconds_sum{job=\"bookwork-frontend\"}[5m]) / rate(request_latency_seconds_count{job=\"bookwork-frontend\"}[5m])",
               "legendFormat": "Avg Latency",
               "refId": "A"
             }
@@ -503,7 +498,7 @@ data:
           "type": "stat",
           "targets": [
             {
-              "expr": "bookwork_frontend_active_sessions",
+              "expr": "active_sessions{job=\"bookwork-frontend\"}",
               "legendFormat": "Active Sessions",
               "refId": "A"
             }
@@ -524,7 +519,7 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "sum(rate(bookwork_frontend_http_requests_total[5m])) by (status)",
+              "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m])) by (status)",
               "legendFormat": "{{status}}",
               "refId": "A"
             }
@@ -545,17 +540,17 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "expr": "histogram_quantile(0.50, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
               "legendFormat": "50th percentile",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "expr": "histogram_quantile(0.95, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
               "legendFormat": "95th percentile",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.99, rate(bookwork_frontend_http_request_duration_seconds_bucket[5m]))",
+              "expr": "histogram_quantile(0.99, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
               "legendFormat": "99th percentile",
               "refId": "C"
             }
@@ -576,17 +571,17 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "bookwork_frontend_nodejs_eventloop_lag_mean_seconds",
-              "legendFormat": "Mean Lag",
+              "expr": "nodejs_eventloop_lag_seconds{job=\"bookwork-frontend\"}",
+              "legendFormat": "Event Loop Lag",
               "refId": "A"
             },
             {
-              "expr": "bookwork_frontend_nodejs_eventloop_lag_p95_seconds",
+              "expr": "nodejs_eventloop_lag_p95_seconds{job=\"bookwork-frontend\"}",
               "legendFormat": "95th Percentile",
               "refId": "B"
             },
             {
-              "expr": "bookwork_frontend_nodejs_eventloop_lag_p99_seconds",
+              "expr": "nodejs_eventloop_lag_p99_seconds{job=\"bookwork-frontend\"}",
               "legendFormat": "99th Percentile",
               "refId": "C"
             }
@@ -614,18 +609,18 @@ data:
           "type": "timeseries",
           "targets": [
             {
-              "expr": "bookwork_frontend_nodejs_active_handles_total",
+              "expr": "nodejs_active_handles{job=\"bookwork-frontend\"}",
               "legendFormat": "Active Handles",
               "refId": "A"
             },
             {
-              "expr": "bookwork_frontend_nodejs_active_requests_total",
+              "expr": "nodejs_active_requests{job=\"bookwork-frontend\"}",
               "legendFormat": "Active Requests",
               "refId": "B"
             },
             {
-              "expr": "bookwork_frontend_nodejs_active_resources_total",
-              "legendFormat": "Total Resources",
+              "expr": "nodejs_active_handles{job=\"bookwork-frontend\"} + nodejs_active_requests{job=\"bookwork-frontend\"}",
+              "legendFormat": "Total Active Resources",
               "refId": "C"
             }
           ],
@@ -694,6 +689,59 @@ data:
             "defaults": {
               "color": {"mode": "palette-classic"},
               "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Request Rate & Error Rate",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+          "targets": [
+            {
+              "expr": "sum(rate(request_count{job=\"bookwork-frontend\"}[5m]))",
+              "legendFormat": "Request Rate",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(error_count{job=\"bookwork-frontend\"}[5m]))",
+              "legendFormat": "Error Rate",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Response Time Percentiles",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
+              "legendFormat": "P50",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
+              "legendFormat": "P95",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(request_latency_seconds_bucket{job=\"bookwork-frontend\"}[5m]))",
+              "legendFormat": "P99",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "s"
             }
           }
         }
