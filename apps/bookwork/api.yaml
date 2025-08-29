@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: bookwork-api
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: bookwork-api
+    app.kubernetes.io/part-of: bookwork
   annotations:
     notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
     notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"

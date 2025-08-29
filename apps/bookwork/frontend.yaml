@@ -3,6 +3,10 @@ kind: Application
 metadata:
   name: bookwork-frontend
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: bookwork-frontend
+    app.kubernetes.io/part-of: bookwork
+    argocd.argoproj.io/instance: bookwork-frontend
   annotations:
     notifications.argoproj.io/subscribe.on-sync-succeeded.slack: "C0958PSUQ74"
     notifications.argoproj.io/subscribe.on-sync-failed.slack: "C0958PSUQ74"
@@ -27,7 +31,22 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
+      - CreateNamespace=true
       - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: bookwork-frontend
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /metadata/labels/app.kubernetes.io~1instance
+    - /spec/template/metadata/labels/app.kubernetes.io~1instance
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /metadata/labels/app.kubernetes.io~1instance
+  revisionHistoryLimit: 3
   info:
     - name: 'Sync Wave'
       value: '10'
