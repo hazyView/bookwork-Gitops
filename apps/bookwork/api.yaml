@@ -17,7 +17,7 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: tenants/bookwork/components/api
+    path: tenants/bookwork/base/components/api
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
@@ -30,4 +30,4 @@ spec:
       - ServerSideApply=true
   info:
     - name: 'Sync Wave'
-      value: '20'
+      value: '5'

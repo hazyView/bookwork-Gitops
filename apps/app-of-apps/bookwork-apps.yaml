@@ -17,11 +17,11 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: tenants/bookwork/base
+    path: apps/bookwork
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: bookwork
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true

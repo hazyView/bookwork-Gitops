@@ -5,10 +5,12 @@ metadata:
   namespace: bookwork
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/instance: bookwork-frontend
   labels:
     app.kubernetes.io/name: bookwork-frontend
     app.kubernetes.io/part-of: bookwork
     app.kubernetes.io/component: frontend
+    argocd.argoproj.io/instance: bookwork-frontend
 spec:
   selector:
     app: bookwork-frontend

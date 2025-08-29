@@ -30,6 +30,8 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   info:
+    - name: 'Sync Wave'
+      value: '15'
     - name: 'Purpose'
       value: 'Complete observability stack: Prometheus, Grafana, AlertManager'
     - name: 'Components'

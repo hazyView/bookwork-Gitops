@@ -17,7 +17,7 @@ spec:
   project: bookwork
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
-    path: tenants/bookwork/components/frontend
+    path: tenants/bookwork/base/components/frontend
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'

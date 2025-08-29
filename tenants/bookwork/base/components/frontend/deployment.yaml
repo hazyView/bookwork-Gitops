@@ -5,10 +5,12 @@ metadata:
   namespace: bookwork
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/instance: bookwork-frontend
   labels:
     app.kubernetes.io/name: bookwork-frontend
     app.kubernetes.io/part-of: bookwork
     app.kubernetes.io/component: frontend
+    argocd.argoproj.io/instance: bookwork-frontend
 spec:
   replicas: 2
   selector:
@@ -21,6 +23,7 @@ spec:
         app.kubernetes.io/name: bookwork-frontend
         app.kubernetes.io/part-of: bookwork
         app.kubernetes.io/component: frontend
+        app.kubernetes.io/instance: bookwork-frontend
         version: v1
       annotations:
         prometheus.io/scrape: "true"
