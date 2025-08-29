@@ -13,5 +13,3 @@ images:
 - name: bookwork-api
   newName: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-api
   newTag: 6fb3352
-- name: us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend
-  newTag: de1ce20
