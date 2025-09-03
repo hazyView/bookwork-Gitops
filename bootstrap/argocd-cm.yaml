@@ -105,14 +105,6 @@ data:
   application.instanceLabelKey: argocd.argoproj.io/instance
   # Enable resource tracking method for better discovery of child resources like pods
   application.resourceTrackingMethod: "annotation+label"
-  # Enable resource inclusion to track pods created by deployments
-  resource.inclusions: |
-    - apiGroups:
-      - ""
-      kinds:
-      - Pod
-      clusters:
-      - "*"
   server.rbac.log: "true"
   resource.compareoptions: |
     # Ignore all status subresources when comparing resources
