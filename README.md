@@ -352,7 +352,6 @@ All sensitive data is encrypted using Bitnami Sealed Secrets:
 
 ### OAuth Integration Details
 **ArgoCD GitHub OAuth:**
-- Client ID: `Ov23likhDtqBQD2g46ax`
 - Callback URL: `https://argocd.bookwork-demo.com/api/dex/callback`
 
 **Grafana GitHub OAuth:**
@@ -377,12 +376,4 @@ All sensitive data is encrypted using Bitnami Sealed Secrets:
 - Frontend application running with latest image tag `f6452a4`
 - API application deployment controlled (disabled by default)
 
-### Next Steps
-1. Update CI/CD pipelines in application repositories to use new `manifests/` structure
-2. Consider enabling API application when database infrastructure is ready
-3. Monitor and optimize resource tracking and sync performance
-
 ---
-
-**Last Updated**: September 3, 2025  
-**Documentation Version**: 2.0 (Post-restructuring)
