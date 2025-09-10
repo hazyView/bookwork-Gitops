@@ -38,13 +38,11 @@ data:
     
     [auth.anonymous]
     enabled = true
-    org_role = Viewer
+    org_role = Admin
     
     [auth.github]
     enabled = true
     allow_sign_up = true
-    auto_assign_org = true
-    auto_assign_org_role = Viewer
     client_id = ${GF_AUTH_GITHUB_CLIENT_ID}
     client_secret = ${GF_AUTH_GITHUB_CLIENT_SECRET}
     scopes = user:email,read:org
@@ -58,7 +56,7 @@ data:
     # Disable admin assignment via GitHub OAuth
     allow_assign_grafana_admin = false
     # Skip organization member API calls for better compatibility
-    skip_org_role_update_sync = false
+    skip_org_role_update_sync = true
     
     [log]
     mode = console

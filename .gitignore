@@ -1,2 +1,3 @@
 validate-grafana-oauth.sh
 debug-grafana-oauth.sh
+manifest/bookwork/observability/grafana/set-folder-permissions.sh
