@@ -37,7 +37,7 @@ data:
     disable_signout_menu = false
     
     [auth.anonymous]
-    enabled = false
+    enabled = true
     org_role = Viewer
     
     [auth.github]
@@ -81,7 +81,7 @@ data:
     enable = ngalert
     
     [rbac]
-    enabled = true
+    enabled = false
 ---
 apiVersion: v1
 kind: ConfigMap
