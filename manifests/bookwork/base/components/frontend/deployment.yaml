@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: "us-central1-docker.pkg.dev/bookwork-466915/bookwork-registry/bookwork-frontend" # This will be updated by CI/CD
+          image: "us-central1-docker.pkg.dev/bookwork-472322/bookwork-registry/bookwork-frontend" # This will be updated by CI/CD
           ports:
             - name: http
               containerPort: 80
