@@ -9,7 +9,11 @@ metadata:
     app.kubernetes.io/name: grafana-team-sync-cron
     app.kubernetes.io/part-of: bookwork-observability
 spec:
-  schedule: "*/5 * * * *"  # Run every 5 minutes
+  schedule: "0 9 * * *"  # Once daily at 9 AM
+  # Alternative schedules:
+  # "0 9 * * *"     # Once daily at 9 AM
+  # "0 */12 * * *"  # Every 12 hours
+  # "*/5 * * * *"   # Every 5 minutes (current - too frequent)
   jobTemplate:
     spec:
       template:

@@ -1,19 +1,24 @@
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
-  name: grafana-folder-permissions
+  name: grafana-folder-permissions-cron
   namespace: monitoring
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    # Removed ArgoCD hooks since this is now a recurring CronJob
   labels:
-    app.kubernetes.io/name: grafana-folder-permissions
+    app.kubernetes.io/name: grafana-folder-permissions-cron
     app.kubernetes.io/part-of: bookwork-observability
 spec:
-  template:
+  schedule: "0 2 * * *"  # Run daily at 2:00 AM (low-traffic time)
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid  # Prevent overlapping executions
+  jobTemplate:
     spec:
-      restartPolicy: OnFailure
+      template:
+        spec:
+          restartPolicy: OnFailure
       containers:
       - name: set-permissions
         image: alpine/curl:8.4.0
