@@ -19,8 +19,8 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
-      containers:
-      - name: set-permissions
+          containers:
+          - name: set-permissions
         image: alpine/curl:8.4.0
         command: ["/bin/sh"]
         args:
