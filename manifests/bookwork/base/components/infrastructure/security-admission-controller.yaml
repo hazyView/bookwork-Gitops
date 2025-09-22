@@ -1,0 +1,316 @@
+---
+# ValidatingAdmissionWebhook to enforce security policies
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionWebhook
+metadata:
+  name: security-policy-validator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: security-policy-validator
+    app.kubernetes.io/part-of: bookwork-security
+webhooks:
+- name: validate-security-context.security.bookwork.com
+  clientConfig:
+    service:
+      name: security-validator-service
+      namespace: bookwork
+      path: /validate-security-context
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: ["apps"]
+    apiVersions: ["v1"]
+    resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  failurePolicy: Fail
+  sideEffects: None
+
+---
+# ValidatingAdmissionWebhook to prevent secret leakage
+- name: validate-secrets.security.bookwork.com
+  clientConfig:
+    service:
+      name: security-validator-service
+      namespace: bookwork
+      path: /validate-secrets
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["secrets"]
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: ["bitnami.com"]
+    apiVersions: ["v1alpha1"]
+    resources: ["sealedsecrets"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  failurePolicy: Fail
+  sideEffects: None
+
+---
+# Security Validator Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-validator
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: security-validator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: security-validator
+        app.kubernetes.io/part-of: bookwork-security
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: security-validator
+      containers:
+      - name: validator
+        image: openpolicyagent/opa:0.57.0-envoy
+        args:
+        - "run"
+        - "--server"
+        - "--config-file=/config/config.yaml"
+        - "--authorization=basic"
+        - "/policies"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        ports:
+        - containerPort: 8181
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: policies
+          mountPath: /policies
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: security-validator-config
+      - name: policies
+        configMap:
+          name: security-policies
+      - name: tmp
+        emptyDir:
+          sizeLimit: 100Mi
+
+---
+# Service for the security validator
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-validator-service
+  namespace: bookwork
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+spec:
+  selector:
+    app.kubernetes.io/name: security-validator
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8181
+    protocol: TCP
+
+---
+# ServiceAccount for security validator
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-validator
+  namespace: bookwork
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+
+---
+# ClusterRole for security validator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-validator
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+rules:
+- apiGroups: [""]
+  resources: ["pods", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["bitnami.com"]
+  resources: ["sealedsecrets"]
+  verbs: ["get", "list", "watch"]
+
+---
+# ClusterRoleBinding for security validator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-validator
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: security-validator
+subjects:
+- kind: ServiceAccount
+  name: security-validator
+  namespace: bookwork
+
+---
+# ConfigMap with OPA configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-validator-config
+  namespace: bookwork
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+data:
+  config.yaml: |
+    services:
+      authz:
+        url: http://localhost:8181
+    bundles:
+      authz:
+        resource: /v1/data/kubernetes/admission
+    decision_logs:
+      console: true
+
+---
+# ConfigMap with security policies
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-policies
+  namespace: bookwork
+  labels:
+    app.kubernetes.io/name: security-validator
+    app.kubernetes.io/part-of: bookwork-security
+data:
+  security.rego: |
+    package kubernetes.admission
+    
+    import rego.v1
+    
+    # Deny if pod security context is missing required fields
+    deny contains msg if {
+        input.request.kind.kind == "Pod"
+        input.request.operation in ["CREATE", "UPDATE"]
+        not valid_pod_security_context
+        msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
+    }
+    
+    # Deny if deployment security context is missing required fields  
+    deny contains msg if {
+        input.request.kind.kind == "Deployment"
+        input.request.operation in ["CREATE", "UPDATE"]
+        not valid_deployment_security_context
+        msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
+    }
+    
+    # Deny if secrets contain plain text sensitive data
+    deny contains msg if {
+        input.request.kind.kind == "Secret"
+        input.request.operation in ["CREATE", "UPDATE"]
+        contains_plain_text_secrets
+        msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
+    }
+    
+    # Check pod security context validity
+    valid_pod_security_context if {
+        spec := input.request.object.spec
+        spec.securityContext.runAsNonRoot == true
+        spec.securityContext.runAsUser > 0
+        all(spec.containers, container_has_security_context)
+    }
+    
+    # Check deployment security context validity
+    valid_deployment_security_context if {
+        spec := input.request.object.spec.template.spec
+        spec.securityContext.runAsNonRoot == true
+        spec.securityContext.runAsUser > 0
+        all(spec.containers, container_has_security_context)
+    }
+    
+    # Check container security context
+    container_has_security_context(container) if {
+        container.securityContext.allowPrivilegeEscalation == false
+        container.securityContext.runAsNonRoot == true
+        "ALL" in container.securityContext.capabilities.drop
+    }
+    
+    # Check for plain text secrets (basic check)
+    contains_plain_text_secrets if {
+        data := input.request.object.data
+        some key, value in data
+        # Basic check for common secret patterns
+        contains(lower(key), "password")
+        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+    }
+    
+    contains_plain_text_secrets if {
+        data := input.request.object.data
+        some key, value in data
+        contains(lower(key), "secret") 
+        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+    }
+    
+    contains_plain_text_secrets if {
+        data := input.request.object.data
+        some key, value in data
+        contains(lower(key), "token")
+        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+    }

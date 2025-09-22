@@ -7,3 +7,4 @@ resources:
 - prom-deployment.yaml
 - prom-service.yaml
 - recording-rules.yaml
+- security-rules.yaml

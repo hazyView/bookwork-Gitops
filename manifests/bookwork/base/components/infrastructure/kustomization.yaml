@@ -5,3 +5,5 @@ resources:
 - namespace.yaml
 - ingress.yaml
 - letsencrypt-issuer.yaml
+- network-policies.yaml
+- security-admission-controller.yaml

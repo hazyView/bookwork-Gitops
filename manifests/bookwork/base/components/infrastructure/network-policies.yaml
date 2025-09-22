@@ -1,0 +1,204 @@
+---
+# Network Policies to implement Zero Trust Security Model
+# These policies ensure secure communication between components
+
+# Default deny-all policy for bookwork namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: default-deny-all
+    app.kubernetes.io/part-of: bookwork
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# Allow frontend to communicate with API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-to-api
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: frontend-to-api
+    app.kubernetes.io/part-of: bookwork
+spec:
+  podSelector:
+    matchLabels:
+      app: bookwork-frontend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow communication to API
+  - to:
+    - podSelector:
+        matchLabels:
+          app: bookwork-api
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS outbound (for external APIs, etc.)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# Allow ingress to frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-frontend
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: ingress-to-frontend
+    app.kubernetes.io/part-of: bookwork
+spec:
+  podSelector:
+    matchLabels:
+      app: bookwork-frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from ingress-nginx
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 80
+
+---
+# Allow API ingress (when enabled)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-ingress
+  namespace: bookwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: api-ingress
+    app.kubernetes.io/part-of: bookwork
+spec:
+  podSelector:
+    matchLabels:
+      app: bookwork-api
+  policyTypes:
+  - Ingress
+  egress:
+  # Allow inbound traffic from frontend
+  - from:
+    - podSelector:
+        matchLabels:
+          app: bookwork-frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from ingress (for direct API access if needed)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# Default deny-all policy for monitoring namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-default-deny-all
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: monitoring-default-deny-all
+    app.kubernetes.io/part-of: bookwork-observability
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# Allow monitoring components to communicate
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-internal
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: monitoring-internal
+    app.kubernetes.io/part-of: bookwork-observability
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: bookwork-observability
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow monitoring components to communicate with each other
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: bookwork-observability
+  # Allow ingress access to monitoring services
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000  # Grafana
+    - protocol: TCP
+      port: 9090  # Prometheus
+    - protocol: TCP
+      port: 9093  # Alertmanager
+  egress:
+  # Allow monitoring components to scrape metrics from all namespaces
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 9090
+    - protocol: TCP
+      port: 3000
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS outbound (for external integrations like Slack, GitHub)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443

@@ -37,8 +37,11 @@ data:
     disable_signout_menu = false
     
     [auth.anonymous]
-    enabled = true
-    org_role = Admin
+    # CRITICAL SECURITY FIX: Disable anonymous admin access
+    enabled = false
+    # If anonymous access is needed (NOT recommended), use Viewer role only
+    # enabled = true
+    # org_role = Viewer
     
     [auth.github]
     enabled = true
@@ -49,14 +52,33 @@ data:
     auth_url = https://github.com/login/oauth/authorize
     token_url = https://github.com/login/oauth/access_token
     api_url = https://api.github.com/user
-    # Allow any GitHub user to sign up and get viewer access
+    
+    # SECURITY CONFIGURATION OPTIONS (choose one approach):
+    
+    # OPTION 1: Open access with manual approval (recommended for most cases)
+    # Allow any GitHub user to sign up, but they get Viewer role by default
+    # Admins can then manually promote users as needed
     allowed_organizations = 
-    team_ids = 
-    role_attribute_path = 
-    # Disable admin assignment via GitHub OAuth
+    auto_assign_org_role = Viewer
+    
+    # OPTION 2: Restrict to specific organization (if you know it)
+    # Uncomment and replace 'hazyView' with your GitHub organization name
+    # allowed_organizations = hazyView
+    # auto_assign_org_role = Editor
+    
+    # OPTION 3: Restrict to specific teams within organization
+    # Requires organization + team configuration
+    # allowed_organizations = hazyView
+    # team_ids = 12345,67890
+    # auto_assign_org_role = Editor
+    
+    # OPTION 4: Use email domain restriction (alternative approach)
+    # This would require additional configuration in your GitHub OAuth app
+    # and is handled at the OAuth app level, not here
+    
+    # Security settings (always apply these)
     allow_assign_grafana_admin = false
-    # Skip organization member API calls for better compatibility
-    skip_org_role_update_sync = true
+    skip_org_role_update_sync = false
     
     [log]
     mode = console

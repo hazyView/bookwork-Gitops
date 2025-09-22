@@ -1,0 +1,148 @@
+---
+# Security Monitoring Rules for Prometheus
+# These rules detect security violations and policy breaches
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: security-monitoring-rules
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: security-monitoring
+    app.kubernetes.io/part-of: bookwork-observability
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: security.rules
+    rules:
+    # Alert on admission controller denials
+    - alert: SecurityPolicyViolation
+      expr: increase(opa_policy_violations_total[5m]) > 0
+      for: 0m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Security policy violation detected"
+        description: "OPA admission controller denied {{ $value }} requests in the last 5 minutes due to security policy violations"
+    
+    # Alert on privileged pod creation
+    - alert: PrivilegedPodCreated
+      expr: increase(kube_pod_container_status_running{container=~".*privileged.*"}[5m]) > 0
+      for: 0m
+      labels:
+        severity: critical
+        category: security
+      annotations:
+        summary: "Privileged pod detected"
+        description: "A privileged container was created in namespace {{ $labels.namespace }}"
+    
+    # Alert on root user pods
+    - alert: RootUserPod
+      expr: kube_pod_security_context_run_as_user == 0
+      for: 2m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Pod running as root user"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is running as root user (UID 0)"
+    
+    # Alert on missing security contexts
+    - alert: MissingSecurityContext
+      expr: kube_pod_spec_security_context_run_as_non_root == 0
+      for: 5m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Pod missing security context"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} does not have runAsNonRoot security context"
+    
+    # Alert on failed secret validation
+    - alert: SecretValidationFailure
+      expr: increase(kube_secrets_validation_failures_total[5m]) > 0
+      for: 0m
+      labels:
+        severity: critical
+        category: security
+      annotations:
+        summary: "Secret validation failure"
+        description: "{{ $value }} secret validation failures detected in the last 5 minutes"
+    
+    # Alert on network policy violations
+    - alert: NetworkPolicyViolation
+      expr: increase(cilium_policy_verdict_total{verdict="DENIED"}[5m]) > 10
+      for: 2m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Network policy violations detected"
+        description: "{{ $value }} network policy violations in the last 5 minutes"
+    
+    # Alert on anonymous access attempts to Grafana
+    - alert: GrafanaAnonymousAccess
+      expr: increase(grafana_api_anonymous_requests_total[5m]) > 0
+      for: 0m
+      labels:
+        severity: critical
+        category: security
+      annotations:
+        summary: "Anonymous access to Grafana detected"
+        description: "{{ $value }} anonymous access attempts to Grafana in the last 5 minutes - this should be disabled"
+    
+    # Alert on failed authentication
+    - alert: AuthenticationFailure
+      expr: increase(grafana_api_login_attempts_total{result="failure"}[5m]) > 5
+      for: 1m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Multiple authentication failures"
+        description: "{{ $value }} authentication failures to Grafana in the last 5 minutes"
+    
+    # Alert on suspicious pod behavior
+    - alert: SuspiciousPodBehavior
+      expr: |
+        (
+          increase(container_cpu_usage_seconds_total[5m]) > 300 or
+          increase(container_network_transmit_bytes_total[5m]) > 1073741824
+        ) and on(pod) kube_pod_security_context_run_as_user == 0
+      for: 2m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Suspicious activity from privileged pod"
+        description: "Pod {{ $labels.pod }} running as root shows high CPU or network activity"
+    
+    # Alert on image pull failures (potential supply chain attack)
+    - alert: ImagePullFailure
+      expr: increase(kube_pod_container_status_waiting_reason{reason="ImagePullBackOff"}[10m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+        category: security
+      annotations:
+        summary: "Image pull failure detected"
+        description: "Container {{ $labels.container }} in pod {{ $labels.pod }} failed to pull image - potential supply chain issue"
+
+  # Recording rules for security metrics
+  - name: security.recording.rules
+    rules:
+    - record: security:pod_security_score
+      expr: |
+        (
+          count by (namespace, pod) (kube_pod_security_context_run_as_non_root == 1) +
+          count by (namespace, pod) (kube_pod_container_security_context_allow_privilege_escalation == 0) +
+          count by (namespace, pod) (kube_pod_container_security_context_read_only_root_filesystem == 1)
+        ) / 3
+    
+    - record: security:namespace_security_compliance
+      expr: |
+        avg by (namespace) (security:pod_security_score) * 100

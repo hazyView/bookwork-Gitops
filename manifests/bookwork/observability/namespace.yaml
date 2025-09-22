@@ -9,3 +9,7 @@ metadata:
     name: monitoring
     app.kubernetes.io/name: observability
     app.kubernetes.io/part-of: bookwork
+    # Pod Security Standards - enforce restricted security standards
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

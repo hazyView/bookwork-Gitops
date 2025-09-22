@@ -28,6 +28,14 @@ spec:
         prometheus.io/port: "80"
         prometheus.io/path: "/metrics"
     spec:
+      # Pod-level security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: frontend
           image: "us-central1-docker.pkg.dev/bookwork-472322/bookwork-registry/bookwork-frontend" # This will be updated by CI/CD
@@ -35,18 +43,39 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          # Container-level security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            runAsUser: 1000
+          # Create writable volume for nginx temp files
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: var-cache-nginx
+            mountPath: /var/cache/nginx
+          - name: var-run
+            mountPath: /var/run
           livenessProbe:
             httpGet:
               path: /
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             requests:
               memory: "128Mi"
@@ -54,3 +83,14 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+      # Volumes for writable directories (since root filesystem is read-only)
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: var-cache-nginx
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: var-run
+        emptyDir:
+          sizeLimit: 10Mi
