@@ -19,69 +19,69 @@ spec:
       template:
         spec:
           restartPolicy: OnFailure
-      containers:
-      - name: dashboard-import
-        image: alpine/curl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          set -e
-          echo "Waiting for Grafana to be ready..."
-          
-          # Wait for Grafana to be ready
-          until curl -f http://grafana:3000/api/health; do
-            echo "Waiting for Grafana..."
-            sleep 5
-          done
-          
-          echo "Grafana is ready. Importing dashboards..."
-          
-          # Get dashboard files from ConfigMap
-          mkdir -p /tmp/dashboards
-          cp /dashboards/* /tmp/dashboards/
-          
-          # Import each dashboard via API
-          for dashboard_file in /tmp/dashboards/*.json; do
-            if [ -f "$dashboard_file" ]; then
-              dashboard_name=$(basename "$dashboard_file" .json)
-              echo "Importing dashboard: $dashboard_name"
+          containers:
+          - name: dashboard-import
+            image: alpine/curl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for Grafana to be ready..."
               
-              # Create import payload
-              dashboard_content=$(cat "$dashboard_file")
-              import_payload=$(cat <<EOF
-          {
-            "dashboard": $dashboard_content,
-            "folderId": 0,
-            "overwrite": true
-          }
-          EOF
-              )
+              # Wait for Grafana to be ready
+              until curl -f http://grafana:3000/api/health; do
+                echo "Waiting for Grafana..."
+                sleep 5
+              done
               
-              # Import dashboard
-              curl -X POST \
-                -H "Content-Type: application/json" \
-                -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                -d "$import_payload" \
-                http://grafana:3000/api/dashboards/db
+              echo "Grafana is ready. Importing dashboards..."
               
-              echo ""
-              echo "Imported dashboard: $dashboard_name"
-            fi
-          done
-          
-          echo "All dashboards imported successfully!"
-        env:
-        - name: GRAFANA_ADMIN_USER
-          value: "admin"
-        - name: GRAFANA_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: grafana-admin-secret
-              key: admin-password
-        volumeMounts:
-        - name: dashboards
-          mountPath: /dashboards
+              # Get dashboard files from ConfigMap
+              mkdir -p /tmp/dashboards
+              cp /dashboards/* /tmp/dashboards/
+              
+              # Import each dashboard via API
+              for dashboard_file in /tmp/dashboards/*.json; do
+                if [ -f "$dashboard_file" ]; then
+                  dashboard_name=$(basename "$dashboard_file" .json)
+                  echo "Importing dashboard: $dashboard_name"
+                  
+                  # Create import payload
+                  dashboard_content=$(cat "$dashboard_file")
+                  import_payload=$(cat <<EOF
+              {
+                "dashboard": $dashboard_content,
+                "folderId": 0,
+                "overwrite": true
+              }
+              EOF
+                  )
+                  
+                  # Import dashboard
+                  curl -X POST \
+                    -H "Content-Type: application/json" \
+                    -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
+                    -d "$import_payload" \
+                    http://grafana:3000/api/dashboards/db
+                  
+                  echo ""
+                  echo "Imported dashboard: $dashboard_name"
+                fi
+              done
+              
+              echo "All dashboards imported successfully!"
+            env:
+            - name: GRAFANA_ADMIN_USER
+              value: "admin"
+            - name: GRAFANA_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-admin-secret
+                  key: admin-password
+            volumeMounts:
+            - name: dashboards
+              mountPath: /dashboards
       volumes:
       - name: dashboards
         configMap:
