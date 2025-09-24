@@ -82,7 +82,7 @@ spec:
             volumeMounts:
             - name: dashboards
               mountPath: /dashboards
-      volumes:
-      - name: dashboards
-        configMap:
-          name: grafana-dashboards
+          volumes:
+          - name: dashboards
+            configMap:
+              name: grafana-dashboards
