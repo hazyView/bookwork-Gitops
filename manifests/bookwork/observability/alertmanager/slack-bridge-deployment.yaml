@@ -30,7 +30,8 @@ spec:
             args:
               - -c
               - |
-                mkdir -p /home/nonroot/.local
+                export HOME=/home/nonroot
+                mkdir -p "$HOME/.local"
                 pip install --user -r /app/requirements.txt
                 export PYTHONPATH=/home/nonroot/.local/lib/python3.11/site-packages:$PYTHONPATH
                 python /app/slack-bridge.py
