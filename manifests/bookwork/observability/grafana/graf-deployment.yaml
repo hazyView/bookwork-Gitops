@@ -100,8 +100,8 @@ spec:
           capabilities:
             drop:
             - ALL
-            seccompProfile:
-              type: RuntimeDefault
+          seccompProfile:
+            type: RuntimeDefault
       volumes:
       - name: config
         configMap:
