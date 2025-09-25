@@ -43,6 +43,7 @@ spec:
                   drop:
                     - ALL
                 runAsUser: 65534
+                runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
             ports:
