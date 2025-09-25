@@ -73,12 +73,12 @@ spec:
                 port: 9093
               initialDelaySeconds: 30
               timeoutSeconds: 10
-              readinessProbe:
-                httpGet:
-                  path: /-/ready
-                  port: 9093
-                initialDelaySeconds: 5
-                timeoutSeconds: 5
+            readinessProbe:
+              httpGet:
+                path: /-/ready
+                port: 9093
+              initialDelaySeconds: 5
+              timeoutSeconds: 5
       volumes:
         - name: config-volume
           configMap:
