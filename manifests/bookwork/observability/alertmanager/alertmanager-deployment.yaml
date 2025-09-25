@@ -79,8 +79,6 @@ spec:
                   port: 9093
                 initialDelaySeconds: 5
                 timeoutSeconds: 5
-            initialDelaySeconds: 30
-            timeoutSeconds: 10
       volumes:
         - name: config-volume
           configMap:
