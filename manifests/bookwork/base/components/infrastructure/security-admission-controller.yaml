@@ -92,7 +92,6 @@ spec:
         - "run"
         - "--server"
         - "--config-file=/config/config.yaml"
-        - "--authorization=basic"
         - "/policies"
         securityContext:
           allowPrivilegeEscalation: false
