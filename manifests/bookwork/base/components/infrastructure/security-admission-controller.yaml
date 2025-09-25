@@ -251,7 +251,15 @@ data:
     deny[msg] {
       input.request.kind.kind == "Pod"
       op := input.request.operation
-      op == "CREATE" or op == "UPDATE"
+      (op == "CREATE" )
+      not valid_pod_security_context
+      msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
+    }
+
+    deny[msg] {
+      input.request.kind.kind == "Pod"
+      op := input.request.operation
+      (op == "UPDATE" )
       not valid_pod_security_context
       msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
@@ -260,7 +268,15 @@ data:
     deny[msg] {
       input.request.kind.kind == "Deployment"
       op := input.request.operation
-      op == "CREATE" or op == "UPDATE"
+      (op == "CREATE")
+      not valid_deployment_security_context
+      msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
+    }
+
+    deny[msg] {
+      input.request.kind.kind == "Deployment"
+      op := input.request.operation
+      (op == "UPDATE")
       not valid_deployment_security_context
       msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
@@ -269,7 +285,15 @@ data:
     deny[msg] {
       input.request.kind.kind == "Secret"
       op := input.request.operation
-      op == "CREATE" or op == "UPDATE"
+      (op == "CREATE")
+      contains_plain_text_secrets
+      msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
+    }
+
+    deny[msg] {
+      input.request.kind.kind == "Secret"
+      op := input.request.operation
+      (op == "UPDATE")
       contains_plain_text_secrets
       msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
     }
@@ -304,19 +328,19 @@ data:
       data := input.request.object.data
       some key, value in data
       contains(lower(key), "password")
-      not starts_with(value, "AgA")
+      not startswith(value, "AgA")
     }
 
     contains_plain_text_secrets {
       data := input.request.object.data
       some key, value in data
       contains(lower(key), "secret")
-      not starts_with(value, "AgA")
+      not startswith(value, "AgA")
     }
 
     contains_plain_text_secrets {
       data := input.request.object.data
       some key, value in data
       contains(lower(key), "token")
-      not starts_with(value, "AgA")
+      not startswith(value, "AgA")
     }
