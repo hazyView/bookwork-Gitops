@@ -91,6 +91,8 @@ spec:
         args:
         - "run"
         - "--server"
+        - "--addr"
+        - "localhost:8181"
         - "/policies"
         securityContext:
           allowPrivilegeEscalation: false
