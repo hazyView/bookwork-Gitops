@@ -1,54 +1,52 @@
 ---
-# ValidatingAdmissionWebhook to enforce security policies
+# ValidatingWebhookConfiguration for security validator webhooks
 apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionWebhook
+kind: ValidatingWebhookConfiguration
 metadata:
-  name: security-policy-validator
+  name: security-validator-webhooks
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "2"
   labels:
-    app.kubernetes.io/name: security-policy-validator
+    app.kubernetes.io/name: security-validator
     app.kubernetes.io/part-of: bookwork-security
 webhooks:
-- name: validate-security-context.security.bookwork.com
-  clientConfig:
-    service:
-      name: security-validator-service
-      namespace: bookwork
-      path: /validate-security-context
-  rules:
-  - operations: ["CREATE", "UPDATE"]
-    apiGroups: ["apps"]
-    apiVersions: ["v1"]
-    resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
-  - operations: ["CREATE", "UPDATE"]
-    apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["pods"]
-  admissionReviewVersions: ["v1", "v1beta1"]
-  failurePolicy: Fail
-  sideEffects: None
+  - name: validate-security-context.security.bookwork.com
+    clientConfig:
+      service:
+        name: security-validator-service
+        namespace: bookwork
+        path: /validate-security-context
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Fail
+    sideEffects: None
 
----
-# ValidatingAdmissionWebhook to prevent secret leakage
-- name: validate-secrets.security.bookwork.com
-  clientConfig:
-    service:
-      name: security-validator-service
-      namespace: bookwork
-      path: /validate-secrets
-  rules:
-  - operations: ["CREATE", "UPDATE"]
-    apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["secrets"]
-  - operations: ["CREATE", "UPDATE"]
-    apiGroups: ["bitnami.com"]
-    apiVersions: ["v1alpha1"]
-    resources: ["sealedsecrets"]
-  admissionReviewVersions: ["v1", "v1beta1"]
-  failurePolicy: Fail
-  sideEffects: None
+  - name: validate-secrets.security.bookwork.com
+    clientConfig:
+      service:
+        name: security-validator-service
+        namespace: bookwork
+        path: /validate-secrets
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["secrets"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["bitnami.com"]
+        apiVersions: ["v1alpha1"]
+        resources: ["sealedsecrets"]
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Fail
+    sideEffects: None
 
 ---
 # Security Validator Service
