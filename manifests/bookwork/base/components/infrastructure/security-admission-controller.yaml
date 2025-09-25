@@ -240,9 +240,7 @@ metadata:
 data:
   security.rego: |
     package kubernetes.admission
-    
-    import rego.v1
-    
+
     # Deny if pod security context is missing required fields
     deny contains msg if {
         input.request.kind.kind == "Pod"
