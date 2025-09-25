@@ -30,7 +30,9 @@ spec:
             args:
               - -c
               - |
-                pip install -r /app/requirements.txt
+                mkdir -p /home/nonroot/.local
+                pip install --user -r /app/requirements.txt
+                export PYTHONPATH=/home/nonroot/.local/lib/python3.11/site-packages:$PYTHONPATH
                 python /app/slack-bridge.py
             securityContext:
                 allowPrivilegeEscalation: false
@@ -54,6 +56,10 @@ spec:
                     optional: true
               - name: SLACK_CHANNEL
                 value: "C0958PSUQ74"  # Your ArgoCD Slack channel ID
+              - name: HOME
+                value: /home/nonroot
+              - name: PYTHONPATH
+                value: /home/nonroot/.local/lib/python3.11/site-packages
             resources:
               requests:
                 memory: 64Mi
@@ -64,6 +70,8 @@ spec:
             volumeMounts:
               - name: app-volume
                 mountPath: /app
+              - name: home-volume
+                mountPath: /home/nonroot
             startupProbe:
               httpGet:
                 path: /
@@ -87,3 +95,5 @@ spec:
           configMap:
             name: alertmanager-slack-bridge
             defaultMode: 0755
+        - name: home-volume
+          emptyDir: {}
