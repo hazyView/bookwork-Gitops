@@ -16,6 +16,9 @@ webhooks:
         name: security-validator-service
         namespace: bookwork
         path: /validate-security-context
+    namespaceSelector:
+      matchLabels:
+        name: bookwork
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: ["apps"]
@@ -35,6 +38,9 @@ webhooks:
         name: security-validator-service
         namespace: bookwork
         path: /validate-secrets
+    namespaceSelector:
+      matchLabels:
+        name: bookwork
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]
