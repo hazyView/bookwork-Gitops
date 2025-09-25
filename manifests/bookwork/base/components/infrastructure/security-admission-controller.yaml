@@ -251,7 +251,7 @@ data:
     deny[msg] {
       input.request.kind.kind == "Pod"
       op := input.request.operation
-      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      op == "CREATE" or op == "UPDATE"
       not valid_pod_security_context
       msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
@@ -260,7 +260,7 @@ data:
     deny[msg] {
       input.request.kind.kind == "Deployment"
       op := input.request.operation
-      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      op == "CREATE" or op == "UPDATE"
       not valid_deployment_security_context
       msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
@@ -269,7 +269,7 @@ data:
     deny[msg] {
       input.request.kind.kind == "Secret"
       op := input.request.operation
-      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      op == "CREATE" or op == "UPDATE"
       contains_plain_text_secrets
       msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
     }
