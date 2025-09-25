@@ -18,105 +18,108 @@ spec:
     spec:
       template:
         spec:
-          restartPolicy: OnFailure
           securityContext:
-            runAsUser: 0  # Run as root to allow package installation
+            runAsNonRoot: true
+            runAsUser: 1000
+          restartPolicy: OnFailure
           containers:
           - name: team-sync
-            image: alpine:3.18
-            command: ["/bin/sh"]
+            image: python:3.11-slim
+            command: ["/bin/bash"]
             args:
               - -c
               - |
-                set -e
+                export HOME=/home/nonroot
+                mkdir -p $HOME/.local
+                pip install --user requests
+                export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
+                python3 -c "
+                import os
+                import requests
+                import json
+                import time
                 
-                # Install required packages
-                apk add --no-cache curl jq
+                grafana_url = 'http://grafana:3000'
+                admin_user = os.environ['GRAFANA_ADMIN_USER']
+                admin_pass = os.environ['GRAFANA_ADMIN_PASSWORD']
+                auth = (admin_user, admin_pass)
                 
-                GRAFANA_URL="http://grafana:3000"
-                TEAM_NAME="Bookwork-Viewers"
+                print('Waiting for Grafana to be ready...')
+                for i in range(30):
+                    try:
+                        requests.get(f'{grafana_url}/api/health')
+                        break
+                    except:
+                        print(f'Waiting for Grafana... ({i+1}/30)')
+                        time.sleep(10)
+                else:
+                    print('Grafana not ready')
+                    exit(1)
                 
-                echo "Starting periodic team synchronization..."
+                print('Waiting for provisioning to complete...')
+                time.sleep(30)
                 
-                # Get team ID by name
-                echo "Looking for team: $TEAM_NAME"
-                TEAM_ID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                    "$GRAFANA_URL/api/teams/search?name=$TEAM_NAME" | \
-                    jq -r '.teams[0].id // empty')
+                print('Starting periodic team synchronization...')
                 
-                if [ -z "$TEAM_ID" ]; then
-                    echo "Team '$TEAM_NAME' not found, creating it..."
-                    
-                    # Create the team
-                    TEAM_RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                        -X POST \
-                        -H "Content-Type: application/json" \
-                        -d "{\"name\":\"$TEAM_NAME\",\"email\":\"bookwork-team@bookwork-demo.com\"}" \
-                        "$GRAFANA_URL/api/teams")
-                    
-                    TEAM_ID=$(echo "$TEAM_RESPONSE" | jq -r '.teamId')
-                    
-                    if [ -n "$TEAM_ID" ] && [ "$TEAM_ID" != "null" ]; then
-                        echo "✅ Created team '$TEAM_NAME' with ID: $TEAM_ID"
-                    else
-                        echo "❌ Failed to create team: $TEAM_RESPONSE"
-                        exit 1
-                    fi
-                else
-                    echo "Found team '$TEAM_NAME' with ID: $TEAM_ID"
-                fi
+                team_name = 'Bookwork-Viewers'
+                response = requests.get(f'{grafana_url}/api/teams/search?name={team_name}', auth=auth)
+                response.raise_for_status()
+                data = response.json()
+                team_id = data.get('teams', [{}])[0].get('id')
                 
-                # Get all GitHub OAuth users (non-admin users with GitHub auth labels)
-                echo "Getting GitHub OAuth users..."
-                GITHUB_USERS=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                    "$GRAFANA_URL/api/users" | \
-                    jq -r '.[] | select(.isAdmin == false and (.authLabels[]? == "GitHub")) | .login')
+                if not team_id:
+                    print(f\"Team '{team_name}' not found, creating it...\")
+                    response = requests.post(f'{grafana_url}/api/teams', auth=auth, json={'name': team_name, 'email': 'bookwork-team@bookwork-demo.com'})
+                    response.raise_for_status()
+                    data = response.json()
+                    team_id = data.get('teamId')
+                    if team_id:
+                        print(f\"Created team '{team_name}' with ID: {team_id}\")
+                    else:
+                        print(f\"Failed to create team: {data}\")
+                        exit(1)
+                else:
+                    print(f\"Found team '{team_name}' with ID: {team_id}\")
                 
-                if [ -z "$GITHUB_USERS" ]; then
-                    echo "No GitHub OAuth users found"
-                    exit 0
-                fi
+                response = requests.get(f'{grafana_url}/api/users', auth=auth)
+                response.raise_for_status()
+                users = response.json()
+                github_users = [u['login'] for u in users if not u.get('isAdmin') and 'GitHub' in (u.get('authLabels') or [])]
                 
-                echo "Found GitHub OAuth users: $GITHUB_USERS"
+                if not github_users:
+                    print('No GitHub OAuth users found')
+                    exit(0)
                 
-                # Get current team members
-                CURRENT_MEMBERS=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                    "$GRAFANA_URL/api/teams/$TEAM_ID/members" | \
-                    jq -r '.[].login')
+                print(f'Found GitHub OAuth users: {github_users}')
                 
-                echo "Current team members: $CURRENT_MEMBERS"
+                response = requests.get(f'{grafana_url}/api/teams/{team_id}/members', auth=auth)
+                response.raise_for_status()
+                current_members = [m['login'] for m in response.json()]
                 
-                # Add GitHub users to team if not already members
-                for user in $GITHUB_USERS; do
-                    if echo "$CURRENT_MEMBERS" | grep -q "^$user$"; then
-                        echo "User '$user' is already a team member"
-                    else
-                        echo "Adding user '$user' to team..."
-                        
-                        # Get user ID
-                        USER_ID=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                            "$GRAFANA_URL/api/users/lookup?loginOrEmail=$user" | \
-                            jq -r '.id')
-                        
-                        if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
-                            RESPONSE=$(curl -s -u "$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD" \
-                                -X POST \
-                                -H "Content-Type: application/json" \
-                                -d "{\"userId\":$USER_ID}" \
-                                "$GRAFANA_URL/api/teams/$TEAM_ID/members")
-                            
-                            if echo "$RESPONSE" | grep -q '"message":"Member added to team"'; then
-                                echo "✅ Successfully added '$user' to team"
-                            else
-                                echo "❌ Failed to add '$user' to team: $RESPONSE"
-                            fi
-                        else
-                            echo "❌ Could not find user ID for '$user'"
-                        fi
-                    fi
-                done
+                print(f'Current team members: {current_members}')
                 
-                echo "Periodic team synchronization completed"
+                for user in github_users:
+                    if user in current_members:
+                        print(f\"User '{user}' is already a team member\")
+                        continue
+                    print(f\"Adding user '{user}' to team...\")
+                    response = requests.get(f'{grafana_url}/api/users/lookup?loginOrEmail={user}', auth=auth)
+                    response.raise_for_status()
+                    data = response.json()
+                    user_id = data.get('id')
+                    if user_id:
+                        response = requests.post(f'{grafana_url}/api/teams/{team_id}/members', auth=auth, json={'userId': user_id})
+                        response.raise_for_status()
+                        data = response.json()
+                        if 'Member added to team' in data.get('message', ''):
+                            print(f\"Successfully added '{user}' to team\")
+                        else:
+                            print(f\"Failed to add '{user}' to team: {data}\")
+                    else:
+                        print(f\"Could not find user ID for '{user}'\")
+                
+                print('Periodic team synchronization completed')
+                "
             env:
             - name: GRAFANA_ADMIN_USER
               value: "admin"

@@ -23,6 +23,9 @@ spec:
         argocd.argoproj.io/instance: bookwork-observability
         version: v1
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
           - name: slack-bridge
             image: python:3.11-slim

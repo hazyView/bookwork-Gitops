@@ -28,6 +28,10 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: prometheus
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
       containers:
           - name: alertmanager
             image: prom/alertmanager:v0.27.0

@@ -19,6 +19,9 @@ spec:
       backoffLimit: 3
       template:
         spec:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
           restartPolicy: OnFailure
           containers:
           - name: set-permissions
