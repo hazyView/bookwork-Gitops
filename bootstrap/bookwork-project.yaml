@@ -41,6 +41,8 @@ spec:
       kind: ClusterRoleBinding
     - group: 'apiextensions.k8s.io'
       kind: CustomResourceDefinition
+    - group: 'admissionregistration.k8s.io'
+      kind: ValidatingWebhookConfiguration
   #Allow Argocd apps to be managed within the project
   namespaceResourceWhitelist:
     - group: 'argoproj.io'
@@ -55,6 +57,8 @@ spec:
       kind: Secret
     - group: 'apps'
       kind: Deployment
+    - group: 'networking.k8s.io'
+      kind: NetworkPolicy
     - group: 'networking.k8s.io'
       kind: Ingress
     - group: 'bitnami.com'
