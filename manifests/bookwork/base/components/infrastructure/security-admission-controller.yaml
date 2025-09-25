@@ -29,7 +29,7 @@ webhooks:
         apiVersions: ["v1"]
         resources: ["pods"]
     admissionReviewVersions: ["v1"]
-    failurePolicy: Fail
+    failurePolicy: Ignore
     sideEffects: None
 
   - name: validate-secrets.security.bookwork.com
@@ -51,7 +51,7 @@ webhooks:
         apiVersions: ["v1alpha1"]
         resources: ["sealedsecrets"]
     admissionReviewVersions: ["v1"]
-    failurePolicy: Fail
+    failurePolicy: Ignore
     sideEffects: None
 
 ---
