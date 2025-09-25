@@ -64,17 +64,23 @@ spec:
             volumeMounts:
               - name: app-volume
                 mountPath: /app
+            startupProbe:
+              httpGet:
+                path: /
+                port: 5001
+              failureThreshold: 30
+              periodSeconds: 10
             livenessProbe:
               httpGet:
                 path: /
                 port: 5001
-              initialDelaySeconds: 30
+              initialDelaySeconds: 120
               periodSeconds: 30
             readinessProbe:
               httpGet:
                 path: /
                 port: 5001
-              initialDelaySeconds: 5
+              initialDelaySeconds: 60
               periodSeconds: 10
       volumes:
         - name: app-volume

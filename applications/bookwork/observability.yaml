@@ -23,7 +23,7 @@ spec:
   source:
     repoURL: 'https://github.com/hazyView/bookwork-gitops.git'
     path: manifests/bookwork/observability
-    targetRevision: b5a2cf777347feaa2ad21535392fd7449f3ef809
+    targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring
