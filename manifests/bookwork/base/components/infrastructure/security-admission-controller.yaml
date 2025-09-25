@@ -223,8 +223,6 @@ metadata:
     app.kubernetes.io/part-of: bookwork-security
 data:
   config.yaml: |
-    decision_logs:
-      console: true
 
 ---
 # ConfigMap with security policies
