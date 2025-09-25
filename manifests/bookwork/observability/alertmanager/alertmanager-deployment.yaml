@@ -38,13 +38,13 @@ spec:
               - '--web.listen-address=0.0.0.0:9093'
               - '--log.level=info'
             securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              runAsNonRoot: true
-              seccompProfile:
-                type: RuntimeDefault
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsUser: 65534
+                seccompProfile:
+                  type: RuntimeDefault
             ports:
               - name: web
                 containerPort: 9093
