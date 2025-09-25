@@ -29,57 +29,58 @@ spec:
     spec:
       serviceAccountName: prometheus
       containers:
-        - name: alertmanager
-          image: prom/alertmanager:v0.27.0
-          args:
-            - '--config.file=/etc/alertmanager/alertmanager.yml'
-            - '--storage.path=/alertmanager'
-            - '--web.external-url=https://alertmanager.bookwork-demo.com'
-            - '--web.listen-address=0.0.0.0:9093'
-            - '--log.level=info'
-          ports:
-            - name: web
-              containerPort: 9093
-              protocol: TCP
-          env:
-            # Environment variables for notification channels
-            - name: SLACK_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: alertmanager-secrets
-                  key: slack-webhook-url
-          resources:
-            requests:
-              memory: 128Mi
-              cpu: 50m
-            limits:
-              memory: 256Mi
-              cpu: 200m
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/alertmanager
-            - name: storage-volume
-              mountPath: /alertmanager
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-          livenessProbe:
-            httpGet:
-              path: /-/healthy
-              port: 9093
+          - name: alertmanager
+            image: prom/alertmanager:v0.27.0
+            args:
+              - '--config.file=/etc/alertmanager/alertmanager.yml'
+              - '--storage.path=/alertmanager'
+              - '--web.external-url=https://alertmanager.bookwork-demo.com'
+              - '--web.listen-address=0.0.0.0:9093'
+              - '--log.level=info'
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+            ports:
+              - name: web
+                containerPort: 9093
+                protocol: TCP
+            env:
+              - name: SLACK_WEBHOOK_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: alertmanager-secrets
+                    key: slack-webhook-url
+            resources:
+              requests:
+                memory: 128Mi
+                cpu: 50m
+              limits:
+                memory: 256Mi
+                cpu: 200m
+            volumeMounts:
+              - name: config-volume
+                mountPath: /etc/alertmanager
+              - name: storage-volume
+                mountPath: /alertmanager
+            livenessProbe:
+              httpGet:
+                path: /-/healthy
+                port: 9093
+              initialDelaySeconds: 30
+              timeoutSeconds: 10
+              readinessProbe:
+                httpGet:
+                  path: /-/ready
+                  port: 9093
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
             initialDelaySeconds: 30
             timeoutSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 9093
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
       volumes:
         - name: config-volume
           configMap:

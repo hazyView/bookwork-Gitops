@@ -24,58 +24,57 @@ spec:
         version: v1
     spec:
       containers:
-        - name: slack-bridge
-          image: python:3.11-slim
-          command: ["/bin/sh"]
-          args:
-            - -c
-            - |
-              pip install -r /app/requirements.txt
-              python /app/slack-bridge.py
-          ports:
-            - name: http
-              containerPort: 5001
-              protocol: TCP
-          env:
-            # Use the same Slack webhook URL as Alertmanager secrets
-            - name: SLACK_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: alertmanager-secrets
-                  key: slack-webhook-url
-                  optional: true
-            - name: SLACK_CHANNEL
-              value: "C0958PSUQ74"  # Your ArgoCD Slack channel ID
-          resources:
-            requests:
-              memory: 64Mi
-              cpu: 50m
-            limits:
-              memory: 128Mi
-              cpu: 100m
-          volumeMounts:
-            - name: app-volume
-              mountPath: /app
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 5001
-            initialDelaySeconds: 30
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 5001
-            initialDelaySeconds: 5
-            periodSeconds: 10
+          - name: slack-bridge
+            image: python:3.11-slim
+            command: ["/bin/sh"]
+            args:
+              - -c
+              - |
+                pip install -r /app/requirements.txt
+                python /app/slack-bridge.py
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+            ports:
+              - name: http
+                containerPort: 5001
+                protocol: TCP
+            env:
+              - name: SLACK_WEBHOOK_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: alertmanager-secrets
+                    key: slack-webhook-url
+                    optional: true
+              - name: SLACK_CHANNEL
+                value: "C0958PSUQ74"  # Your ArgoCD Slack channel ID
+            resources:
+              requests:
+                memory: 64Mi
+                cpu: 50m
+              limits:
+                memory: 128Mi
+                cpu: 100m
+            volumeMounts:
+              - name: app-volume
+                mountPath: /app
+            livenessProbe:
+              httpGet:
+                path: /
+                port: 5001
+              initialDelaySeconds: 30
+              periodSeconds: 30
+            readinessProbe:
+              httpGet:
+                path: /
+                port: 5001
+              initialDelaySeconds: 5
+              periodSeconds: 10
       volumes:
         - name: app-volume
           configMap:
