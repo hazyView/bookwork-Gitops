@@ -61,6 +61,14 @@ spec:
               key: GF_AUTH_GITHUB_CLIENT_SECRET
         - name: GF_INSTALL_PLUGINS
           value: "grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
         livenessProbe:
           httpGet:
             path: /api/health
@@ -94,14 +102,7 @@ spec:
           readOnly: true
         - name: storage
           mountPath: /var/lib/grafana
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
-          seccompProfile:
-            type: RuntimeDefault
+        # ...existing code...
       volumes:
       - name: config
         configMap:
