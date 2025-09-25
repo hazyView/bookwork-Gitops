@@ -224,12 +224,6 @@ metadata:
     app.kubernetes.io/part-of: bookwork-security
 data:
   config.yaml: |
-    services:
-      authz:
-        url: http://localhost:8181
-    bundles:
-      authz:
-        resource: /v1/data/kubernetes/admission
     decision_logs:
       console: true
 

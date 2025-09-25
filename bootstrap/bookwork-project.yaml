@@ -65,6 +65,8 @@ spec:
       kind: SealedSecret
     - group: 'monitoring.coreos.com'
       kind: ServiceMonitor
+    - group: 'monitoring.coreos.com'
+      kind: PrometheusRule
     - group: 'batch'
       kind: Job
     - group: 'batch'
