@@ -241,72 +241,76 @@ data:
   security.rego: |
     package kubernetes.admission
 
-    # Deny if pod security context is missing required fields
-    deny contains msg if {
-        input.request.kind.kind == "Pod"
-        input.request.operation in ["CREATE", "UPDATE"]
-        not valid_pod_security_context
-        msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
+    # Deny on Pod create/update if the pod lacks a valid security context
+    deny[msg] {
+      input.request.kind.kind == "Pod"
+      op := input.request.operation
+      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      not valid_pod_security_context
+      msg := "Pod must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
-    
-    # Deny if deployment security context is missing required fields  
-    deny contains msg if {
-        input.request.kind.kind == "Deployment"
-        input.request.operation in ["CREATE", "UPDATE"]
-        not valid_deployment_security_context
-        msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
+
+    # Deny on Deployment create/update if the deployment template lacks a valid security context
+    deny[msg] {
+      input.request.kind.kind == "Deployment"
+      op := input.request.operation
+      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      not valid_deployment_security_context
+      msg := "Deployment must have valid security context with runAsNonRoot=true and restricted capabilities"
     }
-    
-    # Deny if secrets contain plain text sensitive data
-    deny contains msg if {
-        input.request.kind.kind == "Secret"
-        input.request.operation in ["CREATE", "UPDATE"]
-        contains_plain_text_secrets
-        msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
+
+    # Deny when creating/updating Secrets that look like plaintext sensitive data
+    deny[msg] {
+      input.request.kind.kind == "Secret"
+      op := input.request.operation
+      (op == "CREATE"; true) | (op == "UPDATE"; true)
+      contains_plain_text_secrets
+      msg := "Secrets must not contain plain text sensitive data. Use SealedSecrets instead."
     }
-    
-    # Check pod security context validity
-    valid_pod_security_context if {
-        spec := input.request.object.spec
-        spec.securityContext.runAsNonRoot == true
-        spec.securityContext.runAsUser > 0
-        all(spec.containers, container_has_security_context)
+
+    # Validate pod security context: top-level and at least one container with hardened context
+    valid_pod_security_context {
+      spec := input.request.object.spec
+      spec.securityContext.runAsNonRoot == true
+      spec.securityContext.runAsUser > 0
+      some i
+      c := spec.containers[i]
+      container_has_security_context(c)
     }
-    
-    # Check deployment security context validity
-    valid_deployment_security_context if {
-        spec := input.request.object.spec.template.spec
-        spec.securityContext.runAsNonRoot == true
-        spec.securityContext.runAsUser > 0
-        all(spec.containers, container_has_security_context)
+
+    # Validate deployment pod template security context
+    valid_deployment_security_context {
+      spec := input.request.object.spec.template.spec
+      spec.securityContext.runAsNonRoot == true
+      spec.securityContext.runAsUser > 0
+      some i
+      c := spec.containers[i]
+      container_has_security_context(c)
     }
-    
-    # Check container security context
-    container_has_security_context(container) if {
-        container.securityContext.allowPrivilegeEscalation == false
-        container.securityContext.runAsNonRoot == true
-        "ALL" in container.securityContext.capabilities.drop
+
+    container_has_security_context(container) {
+      container.securityContext.allowPrivilegeEscalation == false
+      container.securityContext.runAsNonRoot == true
+      container.securityContext.capabilities.drop[_] == "ALL"
     }
-    
-    # Check for plain text secrets (basic check)
-    contains_plain_text_secrets if {
-        data := input.request.object.data
-        some key, value in data
-        # Basic check for common secret patterns
-        contains(lower(key), "password")
-        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+
+    contains_plain_text_secrets {
+      data := input.request.object.data
+      some key, value in data
+      contains(lower(key), "password")
+      not starts_with(value, "AgA")
     }
-    
-    contains_plain_text_secrets if {
-        data := input.request.object.data
-        some key, value in data
-        contains(lower(key), "secret") 
-        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+
+    contains_plain_text_secrets {
+      data := input.request.object.data
+      some key, value in data
+      contains(lower(key), "secret")
+      not starts_with(value, "AgA")
     }
-    
-    contains_plain_text_secrets if {
-        data := input.request.object.data
-        some key, value in data
-        contains(lower(key), "token")
-        not starts_with(value, "AgA")  # Not a SealedSecret encrypted value
+
+    contains_plain_text_secrets {
+      data := input.request.object.data
+      some key, value in data
+      contains(lower(key), "token")
+      not starts_with(value, "AgA")
     }
