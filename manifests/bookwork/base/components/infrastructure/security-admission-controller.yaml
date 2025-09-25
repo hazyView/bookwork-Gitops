@@ -326,21 +326,24 @@ data:
 
     contains_plain_text_secrets {
       data := input.request.object.data
-      some key, value in data
+      some key
+      value := data[key]
       contains(lower(key), "password")
       not startswith(value, "AgA")
     }
 
     contains_plain_text_secrets {
       data := input.request.object.data
-      some key, value in data
+      some key
+      value := data[key]
       contains(lower(key), "secret")
       not startswith(value, "AgA")
     }
 
     contains_plain_text_secrets {
       data := input.request.object.data
-      some key, value in data
+      some key
+      value := data[key]
       contains(lower(key), "token")
       not startswith(value, "AgA")
     }
