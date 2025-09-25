@@ -25,6 +25,14 @@ spec:
           containers:
           - name: dashboard-import
             image: alpine/curl:latest
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                - ALL
+              seccompProfile:
+                type: RuntimeDefault
             command:
             - /bin/sh
             - -c

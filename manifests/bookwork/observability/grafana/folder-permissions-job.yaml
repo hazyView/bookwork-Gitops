@@ -26,6 +26,14 @@ spec:
           containers:
           - name: set-permissions
             image: alpine/curl:8.4.0
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                - ALL
+              seccompProfile:
+                type: RuntimeDefault
             command: ["/bin/sh"]
             args:
             - -c

@@ -25,6 +25,14 @@ spec:
           containers:
           - name: team-sync
             image: python:3.11-slim
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                - ALL
+              seccompProfile:
+                type: RuntimeDefault
             command: ["/bin/bash"]
             args:
               - -c
