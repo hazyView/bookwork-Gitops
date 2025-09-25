@@ -6,7 +6,6 @@ resources:
 - graf-cm.yaml
 - graf-deployment.yaml
 - graf-service.yaml
-- team-sync-job.yaml
 - team-sync-cronjob.yaml
 - folder-permissions-job.yaml
 - dashboard-import-job.yaml
