@@ -60,6 +60,14 @@ spec:
               mountPath: /etc/alertmanager
             - name: storage-volume
               mountPath: /alertmanager
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           livenessProbe:
             httpGet:
               path: /-/healthy
